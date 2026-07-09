@@ -5,6 +5,8 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:macsweep": "turbo dev --filter=macsweepdev",
+    "dev:meterbar": "turbo dev --filter=meterbardev",
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck"

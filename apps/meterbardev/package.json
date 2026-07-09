@@ -1,10 +1,10 @@
 {
-  "name": "web",
+  "name": "meterbardev",
   "version": "0.0.1",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3021",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@workspace/landing": "workspace:*",
     "@workspace/ui": "workspace:*",
     "lucide-react": "^1.24.0",
     "next": "16.2.6",
