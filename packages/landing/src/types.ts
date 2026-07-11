@@ -4,7 +4,10 @@ export type LandingProduct = {
   name: string
   domain: string
   repoUrl: string
+  /** Primary download target — a direct artifact (e.g. notarized .dmg) when available. */
   downloadUrl: string
+  /** All-releases page, linked as the secondary "all releases" action. */
+  releasesUrl: string
   installCommand: string
   accent: string
   accentSoft: string

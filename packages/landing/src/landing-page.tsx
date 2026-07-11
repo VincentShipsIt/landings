@@ -9,7 +9,13 @@ import {
 } from "@workspace/ui/components/card"
 import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
-import { ArrowUpRight, ChevronRight, GitFork, Terminal } from "lucide-react"
+import {
+  ArrowUpRight,
+  ChevronRight,
+  Download,
+  GitFork,
+  Terminal,
+} from "lucide-react"
 import type { CSSProperties } from "react"
 
 import type { LandingProduct } from "./types"
@@ -234,31 +240,44 @@ function InstallSection({ product }: LandingPageProps) {
         <Card className="rounded-lg *:rounded-lg">
           <CardHeader>
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Terminal className="size-4" aria-hidden="true" />
-              Homebrew
+              <Download className="size-4" aria-hidden="true" />
+              Direct download
             </div>
             <CardDescription>
-              Copy the command or point an agent at the repository release
-              notes.
+              Signed and notarized. Drag to Applications, done.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <a
+                className={cn(buttonVariants({ size: "lg" }))}
+                href={product.downloadUrl}
+              >
+                <Download data-icon="inline-start" />
+                {product.primaryCta}
+              </a>
+              <a
+                className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+                href={product.releasesUrl}
+              >
+                All releases
+                <ArrowUpRight data-icon="inline-end" />
+              </a>
+            </div>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Terminal className="size-4" aria-hidden="true" />
+              Prefer Homebrew?
+            </div>
             <pre className="overflow-x-auto rounded-lg bg-foreground p-4 text-sm leading-7 text-background">
               <code>{product.installCommand}</code>
             </pre>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <a className={cn(buttonVariants())} href={product.downloadUrl}>
-                Releases
-                <ArrowUpRight data-icon="inline-end" />
-              </a>
-              <a
-                className={cn(buttonVariants({ variant: "outline" }))}
-                href={product.repoUrl}
-              >
-                <GitFork data-icon="inline-start" />
-                GitHub
-              </a>
-            </div>
+            <a
+              className={cn(buttonVariants({ variant: "outline" }))}
+              href={product.repoUrl}
+            >
+              <GitFork data-icon="inline-start" />
+              GitHub
+            </a>
           </CardContent>
         </Card>
       </div>

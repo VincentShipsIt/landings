@@ -16,6 +16,7 @@ export const meterBarLanding: LandingProduct = {
   domain: "meterbar.dev",
   repoUrl: "https://github.com/VincentShipsIt/meterbar.app",
   downloadUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
+  releasesUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
   installCommand:
     "brew tap VincentShipsIt/tap && brew install --cask VincentShipsIt/tap/meterbar",
   accent: "oklch(0.67 0.18 150)",
@@ -76,7 +77,9 @@ export const macSweepLanding: LandingProduct = {
   name: "MacSweep",
   domain: "macsweep.dev",
   repoUrl: "https://github.com/VincentShipsIt/macsweep",
-  downloadUrl: "https://github.com/VincentShipsIt/macsweep/releases",
+  downloadUrl:
+    "https://github.com/VincentShipsIt/macsweep/releases/latest/download/MacSweep.dmg",
+  releasesUrl: "https://github.com/VincentShipsIt/macsweep/releases",
   installCommand:
     "brew tap vincentshipsit/tap && brew install --cask vincentshipsit/tap/macsweep",
   accent: "oklch(0.68 0.16 210)",
@@ -88,14 +91,14 @@ export const macSweepLanding: LandingProduct = {
     "MacSweep is an open-source native macOS cleaner and CLI for scanning, inspecting, and cleaning developer and system clutter safely.",
   heroCopy:
     "A native cleaner for developers who want to see exactly what will be removed before anything is touched. Scan first, clean intentionally, keep the code public.",
-  primaryCta: "Download",
+  primaryCta: "Download for macOS",
   secondaryCta: "View source",
   visual: {
     logo: "/product/logo.svg",
-    primaryImage: "/product/smart-care.png",
+    primaryImage: "/product/maintenance.png",
     secondaryImage: "/product/space-lens.png",
     tertiaryImage: "/product/developer-tools.png",
-    primaryAlt: "MacSweep Smart Care screen",
+    primaryAlt: "MacSweep one-click maintenance actions",
     secondaryAlt: "MacSweep Space Lens disk visualization",
     tertiaryAlt: "MacSweep developer tools cleanup screen",
   },
