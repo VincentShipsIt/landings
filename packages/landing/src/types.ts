@@ -13,6 +13,10 @@ export type LandingProduct = {
   /** Case-insensitive pattern identifying the supported macOS ZIP asset. */
   releaseAssetPattern: string
   installCommand: string
+  /** Copyable instruction for coding agents (Claude Code, Codex) to install the app. */
+  agentPrompt: string
+  /** X (Twitter) profile URL, linked in the footer when set. */
+  xUrl?: string
   accent: string
   accentSoft: string
   title: string

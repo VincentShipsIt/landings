@@ -1,4 +1,4 @@
-import { Manrope, Space_Mono, Syne } from "next/font/google"
+import { Geist, Geist_Mono } from "next/font/google"
 import type { Metadata } from "next"
 
 import { meterBarLanding } from "@workspace/landing"
@@ -6,19 +6,18 @@ import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
 
-const display = Syne({
+const display = Geist({
   subsets: ["latin"],
   variable: "--font-display",
 })
 
-const body = Manrope({
+const body = Geist({
   subsets: ["latin"],
   variable: "--font-body",
 })
 
-const mono = Space_Mono({
+const mono = Geist_Mono({
   subsets: ["latin"],
-  weight: ["400", "700"],
   variable: "--font-code",
 })
 

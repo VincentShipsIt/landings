@@ -11,6 +11,7 @@ import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowUpRight,
+  Bot,
   ChevronRight,
   Download,
   GitFork,
@@ -18,13 +19,18 @@ import {
 } from "lucide-react"
 import type { CSSProperties } from "react"
 
+import { CopyPromptButton } from "./copy-prompt-button"
+import { getLatestRelease } from "./download"
 import type { LandingProduct } from "./types"
 
 type LandingPageProps = {
+  latestVersion?: string
   product: LandingProduct
 }
 
-export function LandingPage({ product }: LandingPageProps) {
+export async function LandingPage({ product }: LandingPageProps) {
+  const latestRelease = await getLatestRelease(product)
+
   return (
     <main
       className="min-h-svh bg-background text-foreground"
@@ -36,9 +42,12 @@ export function LandingPage({ product }: LandingPageProps) {
       }
     >
       <SiteHeader product={product} />
-      <Hero product={product} />
+      <Hero latestVersion={latestRelease?.version} product={product} />
       <FeatureSection product={product} />
-      <InstallSection product={product} />
+      <InstallSection
+        latestVersion={latestRelease?.version}
+        product={product}
+      />
       <SiteFooter product={product} />
     </main>
   )
@@ -89,12 +98,15 @@ function SiteHeader({ product }: LandingPageProps) {
   )
 }
 
-function Hero({ product }: LandingPageProps) {
+function Hero({ latestVersion, product }: LandingPageProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
         <div className="flex flex-col gap-7">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {latestVersion ? (
+              <Badge variant="outline">Latest {latestVersion}</Badge>
+            ) : null}
             {product.proof.map((item) => (
               <Badge key={item} variant="secondary">
                 {item}
@@ -140,44 +152,12 @@ function ProductVisual({ product }: LandingPageProps) {
         className="absolute inset-x-8 top-10 h-40 rounded-full blur-3xl"
         style={{ backgroundColor: "var(--product-accent-soft)" }}
       />
-      <div className="relative grid gap-4">
-        <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-          <img
-            alt={product.visual.primaryAlt}
-            className="aspect-[16/10] w-full object-cover"
-            src={product.visual.primaryImage}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-            <img
-              alt={product.visual.secondaryAlt}
-              className="aspect-[4/3] w-full object-cover"
-              src={product.visual.secondaryImage}
-            />
-          </div>
-          <div className="flex min-h-40 flex-col justify-between rounded-lg border bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <span
-                className="size-2 rounded-full"
-                style={{ backgroundColor: "var(--product-accent)" }}
-              />
-              {product.domain}
-            </div>
-            <p className="text-sm leading-6 text-muted-foreground">
-              {product.description}
-            </p>
-          </div>
-        </div>
-        {product.visual.tertiaryImage ? (
-          <div className="overflow-hidden rounded-lg border bg-card shadow-sm lg:hidden">
-            <img
-              alt={product.visual.tertiaryAlt ?? ""}
-              className="aspect-[16/10] w-full object-cover"
-              src={product.visual.tertiaryImage}
-            />
-          </div>
-        ) : null}
+      <div className="relative mx-auto w-fit overflow-hidden rounded-xl border bg-card shadow-sm">
+        <img
+          alt={product.visual.primaryAlt}
+          className="max-h-[37.5rem] w-auto max-w-full"
+          src={product.visual.primaryImage}
+        />
       </div>
     </div>
   )
@@ -212,7 +192,7 @@ function FeatureSection({ product }: LandingPageProps) {
   )
 }
 
-function InstallSection({ product }: LandingPageProps) {
+function InstallSection({ latestVersion, product }: LandingPageProps) {
   return (
     <section id="install" className="py-20">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -241,9 +221,14 @@ function InstallSection({ product }: LandingPageProps) {
         </div>
         <Card className="rounded-lg *:rounded-lg">
           <CardHeader>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Download className="size-4" aria-hidden="true" />
-              Direct download
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Download className="size-4" aria-hidden="true" />
+                Direct download
+              </div>
+              {latestVersion ? (
+                <Badge variant="secondary">{latestVersion}</Badge>
+              ) : null}
             </div>
             <CardDescription>
               Signed and notarized. Drag to Applications, done.
@@ -272,9 +257,17 @@ function InstallSection({ product }: LandingPageProps) {
               <Terminal className="size-4" aria-hidden="true" />
               Prefer Homebrew?
             </div>
-            <pre className="overflow-x-auto rounded-lg bg-foreground p-4 text-sm leading-7 text-background">
+            <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-4 text-sm leading-7 text-zinc-100 dark:bg-zinc-900">
               <code>{product.installCommand}</code>
             </pre>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Bot className="size-4" aria-hidden="true" />
+              Using Claude Code or Codex?
+            </div>
+            <CopyPromptButton
+              label="Copy prompt for your agent"
+              text={product.agentPrompt}
+            />
             <a
               className={cn(buttonVariants({ variant: "outline" }))}
               href={product.repoUrl}
@@ -308,6 +301,14 @@ function SiteFooter({ product }: LandingPageProps) {
           <a className="hover:text-foreground" href={product.repoUrl}>
             Source
           </a>
+          {product.xUrl ? (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <a className="hover:text-foreground" href={product.xUrl}>
+                @{product.xUrl.split("/").pop()}
+              </a>
+            </>
+          ) : null}
         </div>
       </div>
     </footer>

@@ -19,8 +19,10 @@ export const meterBarLanding: LandingProduct = {
   releasesUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
   releaseRepo: "VincentShipsIt/meterbar.app",
   releaseAssetPattern: String.raw`^MeterBar-v[\d.]+\.zip$`,
-  installCommand:
-    "brew tap VincentShipsIt/tap && brew install --cask VincentShipsIt/tap/meterbar",
+  installCommand: "brew install --cask vincentshipsit/tap/meterbar",
+  agentPrompt:
+    "Install MeterBar on my Mac: run `brew install --cask vincentshipsit/tap/meterbar`, verify the app is signed and notarized with `spctl -a -t exec /Applications/MeterBar.app`, then launch it.",
+  xUrl: "https://x.com/VincentShipsIt",
   accent: "oklch(0.67 0.18 150)",
   accentSoft: "oklch(0.94 0.05 150)",
   title: "MeterBar",
@@ -34,9 +36,10 @@ export const meterBarLanding: LandingProduct = {
   secondaryCta: "View source",
   visual: {
     logo: "/product/logo.png",
-    primaryImage: "/product/menubar.png",
+    primaryImage: "/product/overview.png",
     secondaryImage: "/product/widget-medium.png",
-    primaryAlt: "MeterBar menu bar popover showing AI provider usage limits",
+    primaryAlt:
+      "MeterBar overview window tracking Codex, Claude, and Cursor usage limits",
     secondaryAlt: "MeterBar macOS widget showing quota usage",
   },
   proof: ["MIT licensed", "Local-first", "No account required"],
@@ -69,10 +72,10 @@ export const meterBarLanding: LandingProduct = {
   installNotes: [
     "macOS 26+ target while the app is under active development.",
     "Reads from CLI/provider state already on the machine.",
-    "Unsigned builds may need the usual first-launch quarantine bypass until Developer ID is finished.",
+    "Signed and notarized; no Gatekeeper overrides needed.",
   ],
   footerNote:
-    "Built by VincentShipsIt. Free, open source, and intentionally boring.",
+    "Built by VincentShipsIt. Free, open source, no upsells.",
 }
 
 export const macSweepLanding: LandingProduct = {
@@ -83,8 +86,10 @@ export const macSweepLanding: LandingProduct = {
   releasesUrl: "https://github.com/VincentShipsIt/macsweep/releases",
   releaseRepo: "VincentShipsIt/macsweep",
   releaseAssetPattern: String.raw`^macsweep-v[\d.]+-macos\.zip$`,
-  installCommand:
-    "brew tap vincentshipsit/tap && brew install --cask vincentshipsit/tap/macsweep",
+  installCommand: "brew install --cask vincentshipsit/tap/macsweep",
+  agentPrompt:
+    "Install MacSweep on my Mac: run `brew install --cask vincentshipsit/tap/macsweep`, verify the app is signed and notarized with `spctl -a -t exec /Applications/MacSweep.app`, then launch it.",
+  xUrl: "https://x.com/VincentShipsIt",
   accent: "oklch(0.68 0.16 210)",
   accentSoft: "oklch(0.94 0.05 210)",
   title: "MacSweep",
@@ -98,12 +103,13 @@ export const macSweepLanding: LandingProduct = {
   secondaryCta: "View source",
   visual: {
     logo: "/product/logo.png",
-    primaryImage: "/product/maintenance.png",
-    secondaryImage: "/product/space-lens.png",
+    primaryImage: "/product/smart-care.png",
+    secondaryImage: "/product/system-junk.png",
     tertiaryImage: "/product/developer-tools.png",
-    primaryAlt: "MacSweep one-click maintenance actions",
-    secondaryAlt: "MacSweep Space Lens disk visualization",
-    tertiaryAlt: "MacSweep developer tools cleanup screen",
+    primaryAlt:
+      "MacSweep Smart Care scan results with cleanup categories and reclaimable space",
+    secondaryAlt: "MacSweep System Junk scan listing caches with sizes",
+    tertiaryAlt: "MacSweep package manager cache cleanup",
   },
   proof: ["MIT licensed", "Safety checks", "CLI + SwiftUI app"],
   features: [

@@ -5,10 +5,16 @@ type GitHubRelease = {
     browser_download_url?: unknown
     name?: unknown
   }>
+  tag_name?: unknown
+}
+
+type LatestRelease = {
+  downloadUrl: string
+  version: string
 }
 
 type NextFetchInit = RequestInit & {
-  next: { revalidate: number }
+  next?: { revalidate: number }
 }
 
 const NON_MAC_PLATFORM = /Android|CrOS|iPad|iPhone|Linux|Windows/i
@@ -46,25 +52,23 @@ function redirect(location: string) {
   })
 }
 
-export async function redirectToLatestRelease(
-  request: Request,
-  product: LandingProduct
-) {
-  if (!isMacRequest(request)) return redirect(product.releasesUrl)
-
+async function fetchLatestRelease(
+  product: LandingProduct,
+  init: NextFetchInit
+): Promise<LatestRelease | null> {
   try {
     const response = await fetch(
       `https://api.github.com/repos/${product.releaseRepo}/releases/latest`,
       {
+        ...init,
         headers: {
           Accept: "application/vnd.github+json",
           "X-GitHub-Api-Version": "2022-11-28",
         },
-        next: { revalidate: 900 },
-      } as NextFetchInit
+      }
     )
 
-    if (!response.ok) return redirect(product.releasesUrl)
+    if (!response.ok) return null
 
     const release = (await response.json()) as GitHubRelease
     const assetPattern = new RegExp(product.releaseAssetPattern, "i")
@@ -73,16 +77,34 @@ export async function redirectToLatestRelease(
     )
     const downloadUrl = asset?.browser_download_url
     const expectedPrefix = `https://github.com/${product.releaseRepo}/releases/download/`
+    const version = release.tag_name
 
     if (
       typeof downloadUrl !== "string" ||
-      !downloadUrl.startsWith(expectedPrefix)
+      !downloadUrl.startsWith(expectedPrefix) ||
+      typeof version !== "string" ||
+      !version.trim()
     ) {
-      return redirect(product.releasesUrl)
+      return null
     }
 
-    return redirect(downloadUrl)
+    return { downloadUrl, version: version.trim() }
   } catch {
-    return redirect(product.releasesUrl)
+    return null
   }
+}
+
+export function getLatestRelease(product: LandingProduct) {
+  return fetchLatestRelease(product, { next: { revalidate: 300 } })
+}
+
+export async function redirectToLatestRelease(
+  request: Request,
+  product: LandingProduct
+) {
+  if (!isMacRequest(request)) return redirect(product.releasesUrl)
+
+  const release = await fetchLatestRelease(product, { cache: "no-store" })
+
+  return redirect(release?.downloadUrl ?? product.releasesUrl)
 }
