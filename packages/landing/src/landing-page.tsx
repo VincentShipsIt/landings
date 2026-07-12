@@ -50,7 +50,9 @@ function SiteHeader({ product }: LandingPageProps) {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <a className="flex items-center gap-3" href="#">
           <img alt="" className="size-8 rounded-lg" src={product.visual.logo} />
-          <span className="text-sm font-semibold">{product.name}</span>
+          <span className="font-heading text-sm font-semibold tracking-tight">
+            {product.name}
+          </span>
         </a>
         <nav
           aria-label="Main navigation"
@@ -100,7 +102,7 @@ function Hero({ product }: LandingPageProps) {
             ))}
           </div>
           <div className="flex flex-col gap-5">
-            <h1 className="max-w-3xl text-5xl leading-none font-semibold md:text-7xl">
+            <h1 className="max-w-3xl font-heading text-5xl leading-[0.92] font-semibold tracking-[-0.045em] md:text-7xl">
               {product.title}
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-muted-foreground md:text-xl">
@@ -186,7 +188,7 @@ function FeatureSection({ product }: LandingPageProps) {
     <section id="features" className="border-t bg-muted/30 py-20">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
         <div className="max-w-2xl">
-          <h2 className="text-3xl font-semibold md:text-4xl">
+          <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
             Built like a utility, distributed like open source.
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
@@ -215,7 +217,7 @@ function InstallSection({ product }: LandingPageProps) {
     <section id="install" className="py-20">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="flex flex-col gap-5">
-          <h2 className="text-3xl font-semibold md:text-4xl">
+          <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
             Install from the repo. Fork if useful.
           </h2>
           <p className="text-base leading-7 text-muted-foreground">
@@ -257,7 +259,9 @@ function InstallSection({ product }: LandingPageProps) {
                 {product.primaryCta}
               </a>
               <a
-                className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+                className={cn(
+                  buttonVariants({ size: "lg", variant: "outline" })
+                )}
                 href={product.releasesUrl}
               >
                 All releases

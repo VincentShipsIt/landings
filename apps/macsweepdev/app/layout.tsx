@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google"
+import { Manrope, Space_Mono, Syne } from "next/font/google"
 import type { Metadata } from "next"
 
 import { macSweepLanding } from "@workspace/landing"
@@ -6,11 +6,20 @@ import "@workspace/ui/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
-
-const fontMono = Geist_Mono({
+const display = Syne({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-display",
+})
+
+const body = Manrope({
+  subsets: ["latin"],
+  variable: "--font-body",
+})
+
+const mono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-code",
 })
 
 export const metadata: Metadata = {
@@ -23,6 +32,20 @@ export const metadata: Metadata = {
     url: `https://${macSweepLanding.domain}`,
     siteName: macSweepLanding.name,
     type: "website",
+    images: [
+      {
+        url: "/og-card.png",
+        width: 1200,
+        height: 630,
+        alt: "MacSweep — Clean your Mac. Keep control.",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: macSweepLanding.name,
+    description: macSweepLanding.metaDescription,
+    images: ["/og-card.png"],
   },
 }
 
@@ -37,9 +60,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(
         "antialiased",
-        fontMono.variable,
-        "font-sans",
-        geist.variable
+        display.variable,
+        body.variable,
+        mono.variable,
+        "font-sans"
       )}
     >
       <body>

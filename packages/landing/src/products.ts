@@ -15,8 +15,10 @@ export const meterBarLanding: LandingProduct = {
   name: "MeterBar",
   domain: "meterbar.dev",
   repoUrl: "https://github.com/VincentShipsIt/meterbar.app",
-  downloadUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
+  downloadUrl: "/download",
   releasesUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
+  releaseRepo: "VincentShipsIt/meterbar.app",
+  releaseAssetPattern: String.raw`^MeterBar-v[\d.]+\.zip$`,
   installCommand:
     "brew tap VincentShipsIt/tap && brew install --cask VincentShipsIt/tap/meterbar",
   accent: "oklch(0.67 0.18 150)",
@@ -28,10 +30,10 @@ export const meterBarLanding: LandingProduct = {
     "MeterBar is an open-source macOS menu bar app for tracking Claude Code, Codex CLI, and Cursor usage limits locally.",
   heroCopy:
     "A tiny native utility for people who burn through AI coding quotas. It reads local provider state, shows the tightest limit in your menu bar, and keeps the source open.",
-  primaryCta: "Download",
+  primaryCta: "Download for macOS",
   secondaryCta: "View source",
   visual: {
-    logo: "/product/logo.svg",
+    logo: "/product/logo.png",
     primaryImage: "/product/menubar.png",
     secondaryImage: "/product/widget-medium.png",
     primaryAlt: "MeterBar menu bar popover showing AI provider usage limits",
@@ -77,9 +79,10 @@ export const macSweepLanding: LandingProduct = {
   name: "MacSweep",
   domain: "macsweep.dev",
   repoUrl: "https://github.com/VincentShipsIt/macsweep",
-  downloadUrl:
-    "https://github.com/VincentShipsIt/macsweep/releases/latest/download/MacSweep.dmg",
+  downloadUrl: "/download",
   releasesUrl: "https://github.com/VincentShipsIt/macsweep/releases",
+  releaseRepo: "VincentShipsIt/macsweep",
+  releaseAssetPattern: String.raw`^macsweep-v[\d.]+-macos\.zip$`,
   installCommand:
     "brew tap vincentshipsit/tap && brew install --cask vincentshipsit/tap/macsweep",
   accent: "oklch(0.68 0.16 210)",
@@ -94,7 +97,7 @@ export const macSweepLanding: LandingProduct = {
   primaryCta: "Download for macOS",
   secondaryCta: "View source",
   visual: {
-    logo: "/product/logo.svg",
+    logo: "/product/logo.png",
     primaryImage: "/product/maintenance.png",
     secondaryImage: "/product/space-lens.png",
     tertiaryImage: "/product/developer-tools.png",

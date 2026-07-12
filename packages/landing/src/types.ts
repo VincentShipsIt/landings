@@ -4,10 +4,14 @@ export type LandingProduct = {
   name: string
   domain: string
   repoUrl: string
-  /** Primary download target — a direct artifact (e.g. notarized .dmg) when available. */
+  /** Primary download target, usually the platform-aware internal resolver. */
   downloadUrl: string
   /** All-releases page, linked as the secondary "all releases" action. */
   releasesUrl: string
+  /** GitHub repository used to resolve the latest versioned release artifact. */
+  releaseRepo: string
+  /** Case-insensitive pattern identifying the supported macOS ZIP asset. */
+  releaseAssetPattern: string
   installCommand: string
   accent: string
   accentSoft: string
