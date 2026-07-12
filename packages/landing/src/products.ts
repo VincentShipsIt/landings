@@ -19,8 +19,10 @@ export const meterBarLanding: LandingProduct = {
   releasesUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
   releaseRepo: "VincentShipsIt/meterbar.app",
   releaseAssetPattern: String.raw`^MeterBar-v[\d.]+\.zip$`,
-  installCommand:
-    "brew tap VincentShipsIt/tap && brew install --cask VincentShipsIt/tap/meterbar",
+  installCommand: "brew install --cask vincentshipsit/tap/meterbar",
+  agentPrompt:
+    "Install MeterBar on my Mac: run `brew install --cask vincentshipsit/tap/meterbar`, verify the app is signed and notarized with `spctl -a -t exec /Applications/MeterBar.app`, then launch it.",
+  xUrl: "https://x.com/VincentShipsIt",
   accent: "oklch(0.67 0.18 150)",
   accentSoft: "oklch(0.94 0.05 150)",
   title: "MeterBar",
@@ -69,10 +71,10 @@ export const meterBarLanding: LandingProduct = {
   installNotes: [
     "macOS 26+ target while the app is under active development.",
     "Reads from CLI/provider state already on the machine.",
-    "Unsigned builds may need the usual first-launch quarantine bypass until Developer ID is finished.",
+    "Signed and notarized; no Gatekeeper overrides needed.",
   ],
   footerNote:
-    "Built by VincentShipsIt. Free, open source, and intentionally boring.",
+    "Built by VincentShipsIt. Free, open source, no upsells.",
 }
 
 export const macSweepLanding: LandingProduct = {
@@ -83,8 +85,10 @@ export const macSweepLanding: LandingProduct = {
   releasesUrl: "https://github.com/VincentShipsIt/macsweep/releases",
   releaseRepo: "VincentShipsIt/macsweep",
   releaseAssetPattern: String.raw`^macsweep-v[\d.]+-macos\.zip$`,
-  installCommand:
-    "brew tap vincentshipsit/tap && brew install --cask vincentshipsit/tap/macsweep",
+  installCommand: "brew install --cask vincentshipsit/tap/macsweep",
+  agentPrompt:
+    "Install MacSweep on my Mac: run `brew install --cask vincentshipsit/tap/macsweep`, verify the app is signed and notarized with `spctl -a -t exec /Applications/macsweep.dev.app`, then launch it.",
+  xUrl: "https://x.com/VincentShipsIt",
   accent: "oklch(0.68 0.16 210)",
   accentSoft: "oklch(0.94 0.05 210)",
   title: "MacSweep",

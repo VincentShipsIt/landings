@@ -11,6 +11,7 @@ import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowUpRight,
+  Bot,
   ChevronRight,
   Download,
   GitFork,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react"
 import type { CSSProperties } from "react"
 
+import { CopyPromptButton } from "./copy-prompt-button"
 import type { LandingProduct } from "./types"
 
 type LandingPageProps = {
@@ -272,9 +274,17 @@ function InstallSection({ product }: LandingPageProps) {
               <Terminal className="size-4" aria-hidden="true" />
               Prefer Homebrew?
             </div>
-            <pre className="overflow-x-auto rounded-lg bg-foreground p-4 text-sm leading-7 text-background">
+            <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-4 text-sm leading-7 text-zinc-100 dark:bg-zinc-900">
               <code>{product.installCommand}</code>
             </pre>
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Bot className="size-4" aria-hidden="true" />
+              Using Claude Code or Codex?
+            </div>
+            <CopyPromptButton
+              label="Copy prompt for your agent"
+              text={product.agentPrompt}
+            />
             <a
               className={cn(buttonVariants({ variant: "outline" }))}
               href={product.repoUrl}
@@ -308,6 +318,14 @@ function SiteFooter({ product }: LandingPageProps) {
           <a className="hover:text-foreground" href={product.repoUrl}>
             Source
           </a>
+          {product.xUrl ? (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <a className="hover:text-foreground" href={product.xUrl}>
+                @{product.xUrl.split("/").pop()}
+              </a>
+            </>
+          ) : null}
         </div>
       </div>
     </footer>
