@@ -125,7 +125,18 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+    /* Offset anchor targets so the sticky 4rem header never covers them. */
+    scroll-padding-top: 5rem;
+  }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
