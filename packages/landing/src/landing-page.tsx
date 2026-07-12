@@ -142,44 +142,12 @@ function ProductVisual({ product }: LandingPageProps) {
         className="absolute inset-x-8 top-10 h-40 rounded-full blur-3xl"
         style={{ backgroundColor: "var(--product-accent-soft)" }}
       />
-      <div className="relative grid gap-4">
-        <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-          <img
-            alt={product.visual.primaryAlt}
-            className="aspect-[16/10] w-full object-cover"
-            src={product.visual.primaryImage}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
-            <img
-              alt={product.visual.secondaryAlt}
-              className="aspect-[4/3] w-full object-cover"
-              src={product.visual.secondaryImage}
-            />
-          </div>
-          <div className="flex min-h-40 flex-col justify-between rounded-lg border bg-card p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <span
-                className="size-2 rounded-full"
-                style={{ backgroundColor: "var(--product-accent)" }}
-              />
-              {product.domain}
-            </div>
-            <p className="text-sm leading-6 text-muted-foreground">
-              {product.description}
-            </p>
-          </div>
-        </div>
-        {product.visual.tertiaryImage ? (
-          <div className="overflow-hidden rounded-lg border bg-card shadow-sm lg:hidden">
-            <img
-              alt={product.visual.tertiaryAlt ?? ""}
-              className="aspect-[16/10] w-full object-cover"
-              src={product.visual.tertiaryImage}
-            />
-          </div>
-        ) : null}
+      <div className="relative mx-auto w-fit overflow-hidden rounded-xl border bg-card shadow-sm">
+        <img
+          alt={product.visual.primaryAlt}
+          className="max-h-[37.5rem] w-auto max-w-full"
+          src={product.visual.primaryImage}
+        />
       </div>
     </div>
   )
