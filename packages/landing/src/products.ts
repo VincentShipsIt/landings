@@ -36,9 +36,10 @@ export const meterBarLanding: LandingProduct = {
   secondaryCta: "View source",
   visual: {
     logo: "/product/logo.png",
-    primaryImage: "/product/menubar.png",
+    primaryImage: "/product/overview.png",
     secondaryImage: "/product/widget-medium.png",
-    primaryAlt: "MeterBar menu bar popover showing AI provider usage limits",
+    primaryAlt:
+      "MeterBar overview window tracking Codex, Claude, and Cursor usage limits",
     secondaryAlt: "MeterBar macOS widget showing quota usage",
   },
   proof: ["MIT licensed", "Local-first", "No account required"],
@@ -102,12 +103,13 @@ export const macSweepLanding: LandingProduct = {
   secondaryCta: "View source",
   visual: {
     logo: "/product/logo.png",
-    primaryImage: "/product/maintenance.png",
-    secondaryImage: "/product/space-lens.png",
+    primaryImage: "/product/smart-care.png",
+    secondaryImage: "/product/system-junk.png",
     tertiaryImage: "/product/developer-tools.png",
-    primaryAlt: "MacSweep one-click maintenance actions",
-    secondaryAlt: "MacSweep Space Lens disk visualization",
-    tertiaryAlt: "MacSweep developer tools cleanup screen",
+    primaryAlt:
+      "MacSweep Smart Care scan results with cleanup categories and reclaimable space",
+    secondaryAlt: "MacSweep System Junk scan listing caches with sizes",
+    tertiaryAlt: "MacSweep package manager cache cleanup",
   },
   proof: ["MIT licensed", "Safety checks", "CLI + SwiftUI app"],
   features: [
