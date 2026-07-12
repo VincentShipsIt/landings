@@ -87,7 +87,7 @@ export const macSweepLanding: LandingProduct = {
   releaseAssetPattern: String.raw`^macsweep-v[\d.]+-macos\.zip$`,
   installCommand: "brew install --cask vincentshipsit/tap/macsweep",
   agentPrompt:
-    "Install MacSweep on my Mac: run `brew install --cask vincentshipsit/tap/macsweep`, verify the app is signed and notarized with `spctl -a -t exec /Applications/macsweep.dev.app`, then launch it.",
+    "Install MacSweep on my Mac: run `brew install --cask vincentshipsit/tap/macsweep`, verify the app is signed and notarized with `spctl -a -t exec /Applications/MacSweep.app`, then launch it.",
   xUrl: "https://x.com/VincentShipsIt",
   accent: "oklch(0.68 0.16 210)",
   accentSoft: "oklch(0.94 0.05 210)",
