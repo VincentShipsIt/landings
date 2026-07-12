@@ -20,13 +20,17 @@ import {
 import type { CSSProperties } from "react"
 
 import { CopyPromptButton } from "./copy-prompt-button"
+import { getLatestRelease } from "./download"
 import type { LandingProduct } from "./types"
 
 type LandingPageProps = {
+  latestVersion?: string
   product: LandingProduct
 }
 
-export function LandingPage({ product }: LandingPageProps) {
+export async function LandingPage({ product }: LandingPageProps) {
+  const latestRelease = await getLatestRelease(product)
+
   return (
     <main
       className="min-h-svh bg-background text-foreground"
@@ -38,9 +42,12 @@ export function LandingPage({ product }: LandingPageProps) {
       }
     >
       <SiteHeader product={product} />
-      <Hero product={product} />
+      <Hero latestVersion={latestRelease?.version} product={product} />
       <FeatureSection product={product} />
-      <InstallSection product={product} />
+      <InstallSection
+        latestVersion={latestRelease?.version}
+        product={product}
+      />
       <SiteFooter product={product} />
     </main>
   )
@@ -91,12 +98,15 @@ function SiteHeader({ product }: LandingPageProps) {
   )
 }
 
-function Hero({ product }: LandingPageProps) {
+function Hero({ latestVersion, product }: LandingPageProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
         <div className="flex flex-col gap-7">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {latestVersion ? (
+              <Badge variant="outline">Latest {latestVersion}</Badge>
+            ) : null}
             {product.proof.map((item) => (
               <Badge key={item} variant="secondary">
                 {item}
@@ -182,7 +192,7 @@ function FeatureSection({ product }: LandingPageProps) {
   )
 }
 
-function InstallSection({ product }: LandingPageProps) {
+function InstallSection({ latestVersion, product }: LandingPageProps) {
   return (
     <section id="install" className="py-20">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -211,9 +221,14 @@ function InstallSection({ product }: LandingPageProps) {
         </div>
         <Card className="rounded-lg *:rounded-lg">
           <CardHeader>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Download className="size-4" aria-hidden="true" />
-              Direct download
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Download className="size-4" aria-hidden="true" />
+                Direct download
+              </div>
+              {latestVersion ? (
+                <Badge variant="secondary">{latestVersion}</Badge>
+              ) : null}
             </div>
             <CardDescription>
               Signed and notarized. Drag to Applications, done.
