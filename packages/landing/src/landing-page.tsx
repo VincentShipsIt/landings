@@ -12,9 +12,11 @@ import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowUpRight,
   Bot,
+  CalendarClock,
   ChevronRight,
   Download,
   GitFork,
+  Images,
   Terminal,
 } from "lucide-react"
 import type { CSSProperties } from "react"
@@ -44,7 +46,8 @@ export async function LandingPage({ product }: LandingPageProps) {
       <SiteHeader product={product} />
       <Hero latestVersion={latestRelease?.version} product={product} />
       <FeatureSection product={product} />
-      <InstallSection
+      <ProductGallery product={product} />
+      <AvailabilitySection
         latestVersion={latestRelease?.version}
         product={product}
       />
@@ -75,9 +78,9 @@ function SiteHeader({ product }: LandingPageProps) {
           </a>
           <a
             className="transition-colors hover:text-foreground"
-            href="#install"
+            href="#availability"
           >
-            Install
+            {product.sections.availabilityLabel}
           </a>
           <a
             className="transition-colors hover:text-foreground"
@@ -88,7 +91,7 @@ function SiteHeader({ product }: LandingPageProps) {
         </nav>
         <a
           className={cn(buttonVariants({ size: "sm" }))}
-          href={product.downloadUrl}
+          href={product.distribution.primaryUrl}
         >
           {product.primaryCta}
           <ArrowUpRight data-icon="inline-end" />
@@ -124,7 +127,7 @@ function Hero({ latestVersion, product }: LandingPageProps) {
           <div className="flex flex-col gap-3 sm:flex-row">
             <a
               className={cn(buttonVariants({ size: "lg" }))}
-              href={product.downloadUrl}
+              href={product.distribution.primaryUrl}
             >
               {product.primaryCta}
               <ArrowUpRight data-icon="inline-end" />
@@ -169,14 +172,18 @@ function FeatureSection({ product }: LandingPageProps) {
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
         <div className="max-w-2xl">
           <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
-            Built like a utility, distributed like open source.
+            {product.sections.featureHeading}
           </h2>
           <p className="mt-4 text-base leading-7 text-muted-foreground">
-            The page is intentionally straightforward: show the product, link
-            the source, and make installation obvious.
+            {product.sections.featureDescription}
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div
+          className={cn(
+            "grid gap-4 md:grid-cols-2",
+            product.features.length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"
+          )}
+        >
           {product.features.map((feature) => (
             <Card key={feature.title} className="rounded-lg *:rounded-lg">
               <CardHeader>
@@ -192,20 +199,65 @@ function FeatureSection({ product }: LandingPageProps) {
   )
 }
 
-function InstallSection({ latestVersion, product }: LandingPageProps) {
+function ProductGallery({ product }: LandingPageProps) {
+  const images = [
+    {
+      alt: product.visual.secondaryAlt,
+      src: product.visual.secondaryImage,
+    },
+    product.visual.tertiaryImage && product.visual.tertiaryAlt
+      ? {
+          alt: product.visual.tertiaryAlt,
+          src: product.visual.tertiaryImage,
+        }
+      : null,
+  ].filter((image): image is { alt: string; src: string } => image !== null)
+
+  if (!images.length) return null
+
   return (
-    <section id="install" className="py-20">
+    <section className="border-t py-20">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5">
+        <div className="flex items-center gap-3">
+          <Images className="size-5" aria-hidden="true" />
+          <h2 className="font-heading text-2xl font-semibold tracking-[-0.025em] md:text-3xl">
+            Inside {product.name}
+          </h2>
+        </div>
+        <div
+          className={cn("grid gap-4", images.length > 1 && "md:grid-cols-2")}
+        >
+          {images.map((image) => (
+            <div
+              className="overflow-hidden rounded-xl border bg-card shadow-sm"
+              key={image.src}
+            >
+              <img
+                alt={image.alt}
+                className="h-full max-h-[34rem] w-full object-contain object-top"
+                src={image.src}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AvailabilitySection({ latestVersion, product }: LandingPageProps) {
+  return (
+    <section id="availability" className="border-t bg-muted/30 py-20">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.85fr_1.15fr]">
         <div className="flex flex-col gap-5">
           <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
-            Install from the repo. Fork if useful.
+            {product.sections.availabilityHeading}
           </h2>
           <p className="text-base leading-7 text-muted-foreground">
-            These are distribution pages, not a funnel. The app stays useful as
-            proof of taste, shipping cadence, and open-source surface area.
+            {product.sections.availabilityDescription}
           </p>
           <div className="flex flex-col gap-3">
-            {product.installNotes.map((note) => (
+            {product.distribution.notes.map((note) => (
               <div
                 className="flex gap-3 text-sm text-muted-foreground"
                 key={note}
@@ -219,66 +271,115 @@ function InstallSection({ latestVersion, product }: LandingPageProps) {
             ))}
           </div>
         </div>
-        <Card className="rounded-lg *:rounded-lg">
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Download className="size-4" aria-hidden="true" />
-                Direct download
-              </div>
-              {latestVersion ? (
-                <Badge variant="secondary">{latestVersion}</Badge>
-              ) : null}
-            </div>
-            <CardDescription>
-              Signed and notarized. Drag to Applications, done.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <a
-                className={cn(buttonVariants({ size: "lg" }))}
-                href={product.downloadUrl}
-              >
-                <Download data-icon="inline-start" />
-                {product.primaryCta}
-              </a>
-              <a
-                className={cn(
-                  buttonVariants({ size: "lg", variant: "outline" })
-                )}
-                href={product.releasesUrl}
-              >
-                All releases
-                <ArrowUpRight data-icon="inline-end" />
-              </a>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Terminal className="size-4" aria-hidden="true" />
-              Prefer Homebrew?
-            </div>
-            <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-4 text-sm leading-7 text-zinc-100 dark:bg-zinc-900">
-              <code>{product.installCommand}</code>
-            </pre>
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Bot className="size-4" aria-hidden="true" />
-              Using Claude Code or Codex?
-            </div>
-            <CopyPromptButton
-              label="Copy prompt for your agent"
-              text={product.agentPrompt}
-            />
-            <a
-              className={cn(buttonVariants({ variant: "outline" }))}
-              href={product.repoUrl}
-            >
-              <GitFork data-icon="inline-start" />
-              GitHub
-            </a>
-          </CardContent>
-        </Card>
+        {product.distribution.kind === "github-release" ? (
+          <ReleaseCard latestVersion={latestVersion} product={product} />
+        ) : (
+          <PreviewCard product={product} />
+        )}
       </div>
     </section>
+  )
+}
+
+function ReleaseCard({ latestVersion, product }: LandingPageProps) {
+  const distribution = product.distribution
+
+  if (distribution.kind !== "github-release") return null
+
+  return (
+    <Card className="rounded-lg *:rounded-lg">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Download className="size-4" aria-hidden="true" />
+            Direct download
+          </div>
+          {latestVersion ? (
+            <Badge variant="secondary">{latestVersion}</Badge>
+          ) : null}
+        </div>
+        <CardDescription>
+          Signed and notarized. Drag to Applications, done.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a
+            className={cn(buttonVariants({ size: "lg" }))}
+            href={distribution.primaryUrl}
+          >
+            <Download data-icon="inline-start" />
+            {product.primaryCta}
+          </a>
+          <a
+            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+            href={distribution.releasesUrl}
+          >
+            All releases
+            <ArrowUpRight data-icon="inline-end" />
+          </a>
+        </div>
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Terminal className="size-4" aria-hidden="true" />
+          Prefer Homebrew?
+        </div>
+        <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-4 text-sm leading-7 text-zinc-100 dark:bg-zinc-900">
+          <code>{distribution.installCommand}</code>
+        </pre>
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <Bot className="size-4" aria-hidden="true" />
+          Using Claude Code or Codex?
+        </div>
+        <CopyPromptButton
+          label="Copy prompt for your agent"
+          text={distribution.agentPrompt}
+        />
+        <a
+          className={cn(buttonVariants({ variant: "outline" }))}
+          href={product.repoUrl}
+        >
+          <GitFork data-icon="inline-start" />
+          GitHub
+        </a>
+      </CardContent>
+    </Card>
+  )
+}
+
+function PreviewCard({ product }: LandingPageProps) {
+  const distribution = product.distribution
+
+  if (distribution.kind !== "preview") return null
+
+  return (
+    <Card className="rounded-lg *:rounded-lg">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <CalendarClock className="size-4" aria-hidden="true" />
+            Current availability
+          </div>
+          <Badge variant="secondary">{distribution.statusLabel}</Badge>
+        </div>
+        <CardTitle>{distribution.cardTitle}</CardTitle>
+        <CardDescription>{distribution.cardDescription}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 sm:flex-row">
+        <a
+          className={cn(buttonVariants({ size: "lg" }))}
+          href={distribution.primaryActionUrl}
+        >
+          {distribution.primaryActionLabel}
+          <ArrowUpRight data-icon="inline-end" />
+        </a>
+        <a
+          className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+          href={distribution.secondaryActionUrl}
+        >
+          {distribution.secondaryActionLabel}
+        </a>
+      </CardContent>
+    </Card>
   )
 }
 

@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["C76R5DRH64.dev.opentvtracker.app"],
+        "components": [
+          {
+            "/": "/opentv/openrouter/callback",
+            "comment": "OpenRouter OAuth callback for OpenTV Tracker"
+          }
+        ]
+      }
+    ]
+  }
+}
