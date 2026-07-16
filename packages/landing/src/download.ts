@@ -1,4 +1,4 @@
-import type { LandingProduct } from "./types"
+import type { LandingDistribution, LandingProduct } from "./types"
 
 type GitHubRelease = {
   assets?: Array<{
@@ -53,12 +53,12 @@ function redirect(location: string) {
 }
 
 async function fetchLatestRelease(
-  product: LandingProduct,
+  distribution: Extract<LandingDistribution, { kind: "github-release" }>,
   init: NextFetchInit
 ): Promise<LatestRelease | null> {
   try {
     const response = await fetch(
-      `https://api.github.com/repos/${product.releaseRepo}/releases/latest`,
+      `https://api.github.com/repos/${distribution.releaseRepo}/releases/latest`,
       {
         ...init,
         headers: {
@@ -71,12 +71,12 @@ async function fetchLatestRelease(
     if (!response.ok) return null
 
     const release = (await response.json()) as GitHubRelease
-    const assetPattern = new RegExp(product.releaseAssetPattern, "i")
+    const assetPattern = new RegExp(distribution.releaseAssetPattern, "i")
     const asset = release.assets?.find(
       ({ name }) => typeof name === "string" && assetPattern.test(name)
     )
     const downloadUrl = asset?.browser_download_url
-    const expectedPrefix = `https://github.com/${product.releaseRepo}/releases/download/`
+    const expectedPrefix = `https://github.com/${distribution.releaseRepo}/releases/download/`
     const version = release.tag_name
 
     if (
@@ -95,16 +95,28 @@ async function fetchLatestRelease(
 }
 
 export function getLatestRelease(product: LandingProduct) {
-  return fetchLatestRelease(product, { next: { revalidate: 300 } })
+  if (product.distribution.kind !== "github-release") return null
+
+  return fetchLatestRelease(product.distribution, {
+    next: { revalidate: 300 },
+  })
 }
 
 export async function redirectToLatestRelease(
   request: Request,
   product: LandingProduct
 ) {
-  if (!isMacRequest(request)) return redirect(product.releasesUrl)
+  if (product.distribution.kind !== "github-release") {
+    return redirect(product.distribution.primaryUrl)
+  }
 
-  const release = await fetchLatestRelease(product, { cache: "no-store" })
+  if (!isMacRequest(request)) {
+    return redirect(product.distribution.releasesUrl)
+  }
 
-  return redirect(release?.downloadUrl ?? product.releasesUrl)
+  const release = await fetchLatestRelease(product.distribution, {
+    cache: "no-store",
+  })
+
+  return redirect(release?.downloadUrl ?? product.distribution.releasesUrl)
 }

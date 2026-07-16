@@ -1,14 +1,20 @@
 # VincentShipsIt Landings
 
-Open-source landing pages for VincentShipsIt macOS utilities.
+Open-source landing pages for VincentShipsIt native apps.
 
 ## Apps
 
 - `apps/meterbardev` - `meterbar.dev`
 - `apps/macsweepdev` - `macsweep.dev`
+- `apps/opentvtrackerdev` - `opentvtracker.dev`
 
-Both apps use the same shared renderer and shadcn/ui package. Product-specific copy,
-links, install commands, and screenshots live in `packages/landing/src/products.ts`.
+All apps use the same shared renderer and shadcn/ui package. Product-specific
+copy, links, availability, and screenshots live in
+`packages/landing/src/products.ts`.
+
+`opentvtracker.dev` also serves the Apple App Site Association file and the
+OpenRouter OAuth callback landing path for the production iPhone bundle
+`dev.opentvtracker.app`.
 
 ## Packages
 
@@ -23,6 +29,7 @@ links, install commands, and screenshots live in `packages/landing/src/products.
 bun install
 bun run dev:meterbar
 bun run dev:macsweep
+bun run dev:opentvtracker
 bun run build
 bun run typecheck
 ```
@@ -36,5 +43,5 @@ cd apps/meterbardev
 bunx --bun shadcn@latest add button
 ```
 
-The two apps are intentionally thin. Add reusable UI to `packages/landing` or
+The apps are intentionally thin. Add reusable UI to `packages/landing` or
 `packages/ui`; keep app-local files limited to metadata, assets, and routing.
