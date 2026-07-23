@@ -26,6 +26,44 @@ export type LandingDistribution =
       secondaryActionUrl: string
       notes: string[]
     }
+  | {
+      kind: "multi-platform"
+      primaryUrl: string
+      macOS: {
+        actionLabel: string
+        description: string
+        statusLabel: string
+        url: string
+      }
+      iOS: {
+        actionLabel: string
+        description: string
+        statusLabel: string
+        url: string | null
+      }
+      notes: string[]
+    }
+
+type ScreenshotVisual = {
+  kind: "screenshots"
+  logo: string
+  primaryImage: string
+  secondaryImage: string
+  tertiaryImage?: string
+  primaryAlt: string
+  secondaryAlt: string
+  tertiaryAlt?: string
+}
+
+type InterfacePreviewVisual = {
+  kind: "interface-preview"
+  previewLabel: string
+  previewTitle: string
+  previewItems: Array<{
+    detail: string
+    title: string
+  }>
+}
 
 export type LandingProduct = {
   name: string
@@ -42,15 +80,7 @@ export type LandingProduct = {
   heroCopy: string
   primaryCta: string
   secondaryCta: string
-  visual: {
-    logo: string
-    primaryImage: string
-    secondaryImage: string
-    tertiaryImage?: string
-    primaryAlt: string
-    secondaryAlt: string
-    tertiaryAlt?: string
-  }
+  visual: ScreenshotVisual | InterfacePreviewVisual
   sections: {
     featureHeading: string
     featureDescription: string

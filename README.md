@@ -6,6 +6,7 @@ Open-source landing pages for VincentShipsIt native apps.
 
 - `apps/meterbardev` - `meterbar.dev`
 - `apps/macsweepdev` - `macsweep.dev`
+- `apps/openfocusdev` - `openfocus.dev`
 - `apps/opentvtrackerdev` - `opentvtracker.dev`
 
 All apps use the same shared renderer and shadcn/ui package. Product-specific
