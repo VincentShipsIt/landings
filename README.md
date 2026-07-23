@@ -30,6 +30,7 @@ OpenRouter OAuth callback landing path for the production iPhone bundle
 bun install
 bun run dev:meterbar
 bun run dev:macsweep
+bun run dev:openfocus
 bun run dev:opentvtracker
 bun run build
 bun run typecheck

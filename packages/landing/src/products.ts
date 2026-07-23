@@ -288,8 +288,6 @@ export const openFocusLanding: LandingProduct = {
   repoUrl: "https://github.com/VincentShipsIt/openfocusdev",
   distribution: {
     kind: "multi-platform",
-    primaryUrl:
-      "https://github.com/VincentShipsIt/openfocusdev/releases/latest",
     macOS: {
       actionLabel: "Download for macOS",
       description:

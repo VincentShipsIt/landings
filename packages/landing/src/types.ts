@@ -28,7 +28,6 @@ export type LandingDistribution =
     }
   | {
       kind: "multi-platform"
-      primaryUrl: string
       macOS: {
         actionLabel: string
         description: string

@@ -10,7 +10,6 @@ import {
 import { Separator } from "@workspace/ui/components/separator"
 import { cn } from "@workspace/ui/lib/utils"
 import {
-  Apple,
   ArrowUpRight,
   Bot,
   CalendarClock,
@@ -100,7 +99,7 @@ function SiteHeader({ product }: LandingPageProps) {
         </nav>
         <a
           className={cn(buttonVariants({ size: "sm" }))}
-          href={product.distribution.primaryUrl}
+          href={getPrimaryUrl(product)}
         >
           {product.primaryCta}
           <ArrowUpRight data-icon="inline-end" />
@@ -440,21 +439,22 @@ function MultiPlatformCard({ product }: LandingPageProps) {
                 className={cn(buttonVariants({ size: "lg" }), "w-full")}
                 href={platform.url}
               >
-                <Apple data-icon="inline-start" />
+                <Download data-icon="inline-start" />
                 {platform.actionLabel}
                 <ArrowUpRight data-icon="inline-end" />
               </a>
             ) : (
-              <span
-                aria-disabled="true"
+              <button
                 className={cn(
                   buttonVariants({ size: "lg", variant: "outline" }),
                   "w-full cursor-not-allowed opacity-60"
                 )}
+                disabled
+                type="button"
               >
                 <Smartphone data-icon="inline-start" />
                 {platform.actionLabel}
-              </span>
+              </button>
             )}
           </CardContent>
         </Card>
@@ -608,7 +608,7 @@ function HeroActions({ product }: LandingPageProps) {
           className={cn(buttonVariants({ size: "lg" }))}
           href={distribution.macOS.url}
         >
-          <Apple data-icon="inline-start" />
+          <Download data-icon="inline-start" />
           {distribution.macOS.actionLabel}
           <ArrowUpRight data-icon="inline-end" />
         </a>
@@ -651,6 +651,12 @@ function HeroActions({ product }: LandingPageProps) {
       </a>
     </>
   )
+}
+
+function getPrimaryUrl(product: LandingProduct) {
+  return product.distribution.kind === "multi-platform"
+    ? product.distribution.macOS.url
+    : product.distribution.primaryUrl
 }
 
 function ProductMark({

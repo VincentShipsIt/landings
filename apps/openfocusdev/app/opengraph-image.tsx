@@ -103,7 +103,7 @@ export default function OpenGraphImage() {
             alignItems: "center",
             display: "flex",
             fontSize: 26,
-            fontWeight: 650,
+            fontWeight: 600,
             justifyContent: "space-between",
             marginBottom: 8,
           }}
