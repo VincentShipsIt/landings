@@ -106,8 +106,12 @@ export async function redirectToLatestRelease(
   request: Request,
   product: LandingProduct
 ) {
-  if (product.distribution.kind !== "github-release") {
+  if (product.distribution.kind === "preview") {
     return redirect(product.distribution.primaryUrl)
+  }
+
+  if (product.distribution.kind === "multi-platform") {
+    return redirect(product.distribution.macOS.url)
   }
 
   if (!isMacRequest(request)) {

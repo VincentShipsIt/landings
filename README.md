@@ -6,6 +6,7 @@ Open-source landing pages for VincentShipsIt native apps.
 
 - `apps/meterbardev` - `meterbar.dev`
 - `apps/macsweepdev` - `macsweep.dev`
+- `apps/openfocusdev` - `openfocus.dev`
 - `apps/opentvtrackerdev` - `opentvtracker.dev`
 
 All apps use the same shared renderer and shadcn/ui package. Product-specific
@@ -29,6 +30,7 @@ OpenRouter OAuth callback landing path for the production iPhone bundle
 bun install
 bun run dev:meterbar
 bun run dev:macsweep
+bun run dev:openfocus
 bun run dev:opentvtracker
 bun run build
 bun run typecheck

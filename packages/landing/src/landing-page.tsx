@@ -14,9 +14,17 @@ import {
   Bot,
   CalendarClock,
   ChevronRight,
+  Circle,
   Download,
+  Folder,
   GitFork,
   Images,
+  Inbox,
+  Laptop,
+  ListChecks,
+  Plus,
+  Sparkles,
+  Smartphone,
   Terminal,
 } from "lucide-react"
 import type { CSSProperties } from "react"
@@ -61,7 +69,7 @@ function SiteHeader({ product }: LandingPageProps) {
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <a className="flex items-center gap-3" href="#">
-          <img alt="" className="size-8 rounded-lg" src={product.visual.logo} />
+          <ProductMark product={product} />
           <span className="font-heading text-sm font-semibold tracking-tight">
             {product.name}
           </span>
@@ -91,7 +99,7 @@ function SiteHeader({ product }: LandingPageProps) {
         </nav>
         <a
           className={cn(buttonVariants({ size: "sm" }))}
-          href={product.distribution.primaryUrl}
+          href={getPrimaryUrl(product)}
         >
           {product.primaryCta}
           <ArrowUpRight data-icon="inline-end" />
@@ -125,20 +133,7 @@ function Hero({ latestVersion, product }: LandingPageProps) {
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <a
-              className={cn(buttonVariants({ size: "lg" }))}
-              href={product.distribution.primaryUrl}
-            >
-              {product.primaryCta}
-              <ArrowUpRight data-icon="inline-end" />
-            </a>
-            <a
-              className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
-              href={product.repoUrl}
-            >
-              <GitFork data-icon="inline-start" />
-              {product.secondaryCta}
-            </a>
+            <HeroActions product={product} />
           </div>
         </div>
         <ProductVisual product={product} />
@@ -148,6 +143,10 @@ function Hero({ latestVersion, product }: LandingPageProps) {
 }
 
 function ProductVisual({ product }: LandingPageProps) {
+  if (product.visual.kind === "interface-preview") {
+    return <InterfacePreview product={product} />
+  }
+
   return (
     <div className="relative">
       <div
@@ -162,6 +161,117 @@ function ProductVisual({ product }: LandingPageProps) {
           src={product.visual.primaryImage}
         />
       </div>
+    </div>
+  )
+}
+
+function InterfacePreview({ product }: LandingPageProps) {
+  const visual = product.visual
+
+  if (visual.kind !== "interface-preview") return null
+
+  return (
+    <div
+      aria-label="Stylized OpenFocus interface preview based on the current source code, not a product screenshot"
+      className="relative"
+      role="img"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-8 top-10 h-52 rounded-full blur-3xl"
+        style={{ backgroundColor: "var(--product-accent-soft)" }}
+      />
+      <div className="relative overflow-hidden rounded-3xl border bg-card/95 shadow-2xl shadow-black/10">
+        <div className="flex h-11 items-center gap-2 border-b bg-muted/50 px-4">
+          <span className="size-2.5 rounded-full bg-red-400/70" />
+          <span className="size-2.5 rounded-full bg-amber-400/70" />
+          <span className="size-2.5 rounded-full bg-emerald-400/70" />
+          <span className="ml-auto text-[0.68rem] font-medium tracking-wide text-muted-foreground uppercase">
+            {visual.previewLabel}
+          </span>
+        </div>
+        <div className="grid min-h-[31rem] sm:grid-cols-[10.5rem_1fr]">
+          <aside className="hidden border-r bg-muted/35 p-4 sm:block">
+            <div className="mb-6 flex items-center gap-2">
+              <ProductMark product={product} />
+              <span className="text-sm font-semibold">{product.name}</span>
+            </div>
+            <div className="space-y-1.5 text-sm">
+              {[
+                { icon: ListChecks, label: "Today", selected: true },
+                { icon: CalendarClock, label: "Upcoming" },
+                { icon: Inbox, label: "Inbox" },
+                { icon: Folder, label: "Projects" },
+              ].map((item) => (
+                <div
+                  className={cn(
+                    "flex items-center gap-2 rounded-lg px-2.5 py-2",
+                    item.selected
+                      ? "bg-background font-medium shadow-sm"
+                      : "text-muted-foreground"
+                  )}
+                  key={item.label}
+                >
+                  <item.icon className="size-4" aria-hidden="true" />
+                  {item.label}
+                </div>
+              ))}
+            </div>
+          </aside>
+          <div className="flex min-w-0 flex-col p-5 sm:p-7">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+                  Thursday
+                </p>
+                <h2 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
+                  {visual.previewTitle}
+                </h2>
+              </div>
+              <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-medium shadow-sm">
+                <Sparkles className="size-3.5" aria-hidden="true" />
+                Plan my day
+              </div>
+            </div>
+            <div className="mt-7 flex flex-1 flex-col">
+              <div className="divide-y">
+                {visual.previewItems.map((item) => (
+                  <div className="flex items-start gap-3 py-4" key={item.title}>
+                    <Circle
+                      className="mt-0.5 size-5 shrink-0 text-[var(--product-accent)]"
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {item.detail}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto flex items-center gap-3 rounded-2xl border bg-background/90 p-3.5 shadow-lg shadow-black/5">
+                <Plus
+                  className="size-5 text-[var(--product-accent)]"
+                  aria-hidden="true"
+                />
+                <span className="text-sm text-muted-foreground">
+                  Add a task… try “report fri 5pm !!”
+                </span>
+                <span className="ml-auto hidden rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background sm:inline-flex">
+                  Add
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        Interface treatment based on the public SwiftUI source. Not a product
+        screenshot.
+      </p>
     </div>
   )
 }
@@ -200,6 +310,8 @@ function FeatureSection({ product }: LandingPageProps) {
 }
 
 function ProductGallery({ product }: LandingPageProps) {
+  if (product.visual.kind !== "screenshots") return null
+
   const images = [
     {
       alt: product.visual.secondaryAlt,
@@ -273,11 +385,81 @@ function AvailabilitySection({ latestVersion, product }: LandingPageProps) {
         </div>
         {product.distribution.kind === "github-release" ? (
           <ReleaseCard latestVersion={latestVersion} product={product} />
+        ) : product.distribution.kind === "multi-platform" ? (
+          <MultiPlatformCard product={product} />
         ) : (
           <PreviewCard product={product} />
         )}
       </div>
     </section>
+  )
+}
+
+function MultiPlatformCard({ product }: LandingPageProps) {
+  const distribution = product.distribution
+
+  if (distribution.kind !== "multi-platform") return null
+
+  const platforms = [
+    {
+      actionLabel: distribution.macOS.actionLabel,
+      description: distribution.macOS.description,
+      icon: Laptop,
+      name: "macOS",
+      statusLabel: distribution.macOS.statusLabel,
+      url: distribution.macOS.url,
+    },
+    {
+      actionLabel: distribution.iOS.actionLabel,
+      description: distribution.iOS.description,
+      icon: Smartphone,
+      name: "iPhone",
+      statusLabel: distribution.iOS.statusLabel,
+      url: distribution.iOS.url,
+    },
+  ]
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      {platforms.map((platform) => (
+        <Card className="rounded-lg *:rounded-lg" key={platform.name}>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <platform.icon className="size-4" aria-hidden="true" />
+                {platform.name}
+              </div>
+              <Badge variant="secondary">{platform.statusLabel}</Badge>
+            </div>
+            <CardDescription>{platform.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {platform.url ? (
+              <a
+                className={cn(buttonVariants({ size: "lg" }), "w-full")}
+                href={platform.url}
+              >
+                <Download data-icon="inline-start" />
+                {platform.actionLabel}
+                <ArrowUpRight data-icon="inline-end" />
+              </a>
+            ) : (
+              <button
+                className={cn(
+                  buttonVariants({ size: "lg", variant: "outline" }),
+                  "w-full cursor-not-allowed opacity-60"
+                )}
+                disabled
+                type="button"
+              >
+                <Smartphone data-icon="inline-start" />
+                {platform.actionLabel}
+              </button>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   )
 }
 
@@ -388,7 +570,7 @@ function SiteFooter({ product }: LandingPageProps) {
     <footer className="border-t py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
-          <img alt="" className="size-7 rounded-md" src={product.visual.logo} />
+          <ProductMark product={product} compact />
           <span>{product.footerNote}</span>
         </div>
         <div className="flex items-center gap-4">
@@ -413,5 +595,100 @@ function SiteFooter({ product }: LandingPageProps) {
         </div>
       </div>
     </footer>
+  )
+}
+
+function HeroActions({ product }: LandingPageProps) {
+  const distribution = product.distribution
+
+  if (distribution.kind === "multi-platform") {
+    return (
+      <>
+        <a
+          className={cn(buttonVariants({ size: "lg" }))}
+          href={distribution.macOS.url}
+        >
+          <Download data-icon="inline-start" />
+          {distribution.macOS.actionLabel}
+          <ArrowUpRight data-icon="inline-end" />
+        </a>
+        {distribution.iOS.url ? (
+          <a
+            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+            href={distribution.iOS.url}
+          >
+            <Smartphone data-icon="inline-start" />
+            {distribution.iOS.actionLabel}
+          </a>
+        ) : (
+          <a
+            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+            href="#availability"
+          >
+            <Smartphone data-icon="inline-start" />
+            {distribution.iOS.actionLabel}
+          </a>
+        )}
+      </>
+    )
+  }
+
+  return (
+    <>
+      <a
+        className={cn(buttonVariants({ size: "lg" }))}
+        href={distribution.primaryUrl}
+      >
+        {product.primaryCta}
+        <ArrowUpRight data-icon="inline-end" />
+      </a>
+      <a
+        className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+        href={product.repoUrl}
+      >
+        <GitFork data-icon="inline-start" />
+        {product.secondaryCta}
+      </a>
+    </>
+  )
+}
+
+function getPrimaryUrl(product: LandingProduct) {
+  return product.distribution.kind === "multi-platform"
+    ? product.distribution.macOS.url
+    : product.distribution.primaryUrl
+}
+
+function ProductMark({
+  compact = false,
+  product,
+}: LandingPageProps & { compact?: boolean }) {
+  if (product.visual.kind === "screenshots") {
+    return (
+      <img
+        alt=""
+        className={cn(compact ? "size-7 rounded-md" : "size-8 rounded-lg")}
+        src={product.visual.logo}
+      />
+    )
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center bg-[var(--product-accent)] text-white shadow-sm",
+        compact ? "size-7 rounded-md" : "size-8 rounded-lg"
+      )}
+    >
+      <span
+        className={cn(
+          "font-heading leading-none font-semibold",
+          compact ? "text-sm" : "text-base"
+        )}
+      >
+        O
+      </span>
+    </span>
   )
 }

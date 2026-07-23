@@ -7,6 +7,7 @@
     "dev": "turbo dev",
     "dev:macsweep": "turbo dev --filter=macsweepdev",
     "dev:meterbar": "turbo dev --filter=meterbardev",
+    "dev:openfocus": "turbo dev --filter=openfocusdev",
     "dev:opentvtracker": "turbo dev --filter=opentvtrackerdev",
     "lint": "turbo lint",
     "format": "turbo format",
