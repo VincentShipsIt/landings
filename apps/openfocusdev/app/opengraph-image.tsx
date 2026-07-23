@@ -57,7 +57,7 @@ export default function OpenGraphImage() {
               width: 50,
             }}
           >
-            ✓
+            O
           </div>
           OpenFocus
         </div>

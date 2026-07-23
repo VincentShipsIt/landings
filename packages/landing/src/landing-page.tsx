@@ -172,7 +172,7 @@ function InterfacePreview({ product }: LandingPageProps) {
 
   return (
     <div
-      aria-label="Stylized OpenFocus interface preview based on the current source code"
+      aria-label="Stylized OpenFocus interface preview based on the current source code, not a product screenshot"
       className="relative"
       role="img"
     >
@@ -681,7 +681,14 @@ function ProductMark({
         compact ? "size-7 rounded-md" : "size-8 rounded-lg"
       )}
     >
-      <ListChecks className={compact ? "size-4" : "size-[1.125rem]"} />
+      <span
+        className={cn(
+          "font-heading leading-none font-semibold",
+          compact ? "text-sm" : "text-base"
+        )}
+      >
+        O
+      </span>
     </span>
   )
 }

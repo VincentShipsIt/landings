@@ -22,7 +22,7 @@ export default function Icon() {
         width: "100%",
       }}
     >
-      ✓
+      O
     </div>,
     size
   )
