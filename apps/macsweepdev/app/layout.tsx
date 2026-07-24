@@ -1,17 +1,16 @@
-import { Geist, Geist_Mono } from "next/font/google"
-import type { Metadata } from "next"
-
-import { macSweepLanding } from "@workspace/landing"
+import {
+  createLandingMetadata,
+  LandingRootLayout,
+  macSweepLanding,
+} from "@workspace/landing"
 import "@workspace/ui/globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@workspace/ui/lib/utils"
+import { Geist, Geist_Mono } from "next/font/google"
+import type { ReactNode } from "react"
 
-const display = Geist({
-  subsets: ["latin"],
-  variable: "--font-display",
-})
-
-const body = Geist({
+// next/font must be loaded from the app that owns the build, so the faces stay
+// here while the rest of the shell comes from the shared layout.
+const sans = Geist({
   subsets: ["latin"],
   variable: "--font-body",
 })
@@ -21,53 +20,12 @@ const mono = Geist_Mono({
   variable: "--font-code",
 })
 
-export const metadata: Metadata = {
-  title: `${macSweepLanding.name} - ${macSweepLanding.description}`,
-  description: macSweepLanding.metaDescription,
-  metadataBase: new URL(`https://${macSweepLanding.domain}`),
-  openGraph: {
-    title: macSweepLanding.name,
-    description: macSweepLanding.metaDescription,
-    url: `https://${macSweepLanding.domain}`,
-    siteName: macSweepLanding.name,
-    type: "website",
-    images: [
-      {
-        url: "/og-card.png",
-        width: 1200,
-        height: 630,
-        alt: "MacSweep — Clean your Mac. Keep control.",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: macSweepLanding.name,
-    description: macSweepLanding.metaDescription,
-    images: ["/og-card.png"],
-  },
-}
+export const metadata = createLandingMetadata(macSweepLanding)
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn(
-        "antialiased",
-        display.variable,
-        body.variable,
-        mono.variable,
-        "font-sans"
-      )}
-    >
-      <body>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
-    </html>
+    <LandingRootLayout fontClassName={cn(sans.variable, mono.variable)}>
+      {children}
+    </LandingRootLayout>
   )
 }

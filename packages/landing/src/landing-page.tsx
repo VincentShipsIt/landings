@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@workspace/ui/components/card"
 import { Separator } from "@workspace/ui/components/separator"
+import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowUpRight,
@@ -16,30 +17,35 @@ import {
   ChevronRight,
   Circle,
   Download,
-  Folder,
   GitFork,
   Images,
-  Inbox,
   Laptop,
-  ListChecks,
   Plus,
   Sparkles,
   Smartphone,
   Terminal,
 } from "lucide-react"
+import Image from "next/image"
 import type { CSSProperties } from "react"
 
 import { CopyPromptButton } from "./copy-prompt-button"
-import { getLatestRelease } from "./download"
-import type { LandingProduct } from "./types"
+import { PRIMARY_CTA_CLASS } from "./cta"
+import { getLatestRelease, type LatestRelease } from "./download"
+import { formatFileSize } from "./format"
+import { SubscribeForm } from "./subscribe-form"
+import type { LandingImage, LandingProduct } from "./types"
 
-type LandingPageProps = {
-  latestVersion?: string
+type ProductProps = {
   product: LandingProduct
 }
 
-export async function LandingPage({ product }: LandingPageProps) {
-  const latestRelease = await getLatestRelease(product)
+type ReleaseProps = ProductProps & {
+  /** Resolved GitHub release, or null when the lookup failed or does not apply. */
+  release: LatestRelease | null
+}
+
+export async function LandingPage({ product }: ProductProps) {
+  const release = await getLatestRelease(product)
 
   return (
     <main
@@ -47,28 +53,29 @@ export async function LandingPage({ product }: LandingPageProps) {
       style={
         {
           "--product-accent": product.accent,
+          // Accents sit around L 0.67, which is too light for white button text.
+          // Darkening keeps the brand hue while clearing WCAG AA.
+          "--product-accent-ink":
+            "color-mix(in oklab, var(--product-accent), black 16%)",
           "--product-accent-soft": product.accentSoft,
         } as CSSProperties
       }
     >
       <SiteHeader product={product} />
-      <Hero latestVersion={latestRelease?.version} product={product} />
+      <Hero product={product} release={release} />
       <FeatureSection product={product} />
       <ProductGallery product={product} />
-      <AvailabilitySection
-        latestVersion={latestRelease?.version}
-        product={product}
-      />
+      <AvailabilitySection product={product} release={release} />
       <SiteFooter product={product} />
     </main>
   )
 }
 
-function SiteHeader({ product }: LandingPageProps) {
+function SiteHeader({ product }: ProductProps) {
   return (
     <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <a className="flex items-center gap-3" href="#">
+        <a className="flex items-center gap-3" href="/">
           <ProductMark product={product} />
           <span className="font-heading text-sm font-semibold tracking-tight">
             {product.name}
@@ -97,26 +104,29 @@ function SiteHeader({ product }: LandingPageProps) {
             Source
           </a>
         </nav>
-        <a
-          className={cn(buttonVariants({ size: "sm" }))}
-          href={getPrimaryUrl(product)}
-        >
-          {product.primaryCta}
-          <ArrowUpRight data-icon="inline-end" />
-        </a>
+        <div className="flex items-center gap-1.5">
+          <ThemeToggle />
+          <a
+            className={cn(buttonVariants({ size: "sm" }), PRIMARY_CTA_CLASS)}
+            href={product.distribution.primaryUrl}
+          >
+            {product.primaryCta}
+            <ArrowUpRight data-icon="inline-end" />
+          </a>
+        </div>
       </div>
     </header>
   )
 }
 
-function Hero({ latestVersion, product }: LandingPageProps) {
+function Hero({ product, release }: ReleaseProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
         <div className="flex flex-col gap-7">
           <div className="flex flex-wrap items-center gap-2">
-            {latestVersion ? (
-              <Badge variant="outline">Latest {latestVersion}</Badge>
+            {release ? (
+              <Badge variant="outline">Latest {release.version}</Badge>
             ) : null}
             {product.proof.map((item) => (
               <Badge key={item} variant="secondary">
@@ -132,8 +142,11 @@ function Hero({ latestVersion, product }: LandingPageProps) {
               {product.heroCopy}
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <HeroActions product={product} />
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <HeroActions product={product} />
+            </div>
+            <DownloadMeta product={product} release={release} />
           </div>
         </div>
         <ProductVisual product={product} />
@@ -142,10 +155,28 @@ function Hero({ latestVersion, product }: LandingPageProps) {
   )
 }
 
-function ProductVisual({ product }: LandingPageProps) {
+/**
+ * The three facts a download decision needs — OS floor, size, version — sitting
+ * directly under the button instead of buried in the availability notes.
+ */
+function DownloadMeta({ product, release }: ReleaseProps) {
+  const parts = [
+    product.platformRequirement,
+    formatFileSize(release?.fileSize),
+    release?.version ? `Version ${release.version}` : null,
+  ].filter((part): part is string => Boolean(part))
+
+  if (!parts.length) return null
+
+  return <p className="text-sm text-muted-foreground">{parts.join(" · ")}</p>
+}
+
+function ProductVisual({ product }: ProductProps) {
   if (product.visual.kind === "interface-preview") {
     return <InterfacePreview product={product} />
   }
+
+  const { primary } = product.visual
 
   return (
     <div className="relative">
@@ -155,27 +186,27 @@ function ProductVisual({ product }: LandingPageProps) {
         style={{ backgroundColor: "var(--product-accent-soft)" }}
       />
       <div className="relative mx-auto w-fit overflow-hidden rounded-xl border bg-card shadow-sm">
-        <img
-          alt={product.visual.primaryAlt}
-          className="max-h-[37.5rem] w-auto max-w-full"
-          src={product.visual.primaryImage}
+        <Image
+          alt={primary.alt}
+          className="h-auto max-h-[37.5rem] w-auto max-w-full"
+          height={primary.height}
+          priority
+          sizes="(min-width: 1024px) 40rem, 100vw"
+          src={primary.src}
+          width={primary.width}
         />
       </div>
     </div>
   )
 }
 
-function InterfacePreview({ product }: LandingPageProps) {
+function InterfacePreview({ product }: ProductProps) {
   const visual = product.visual
 
   if (visual.kind !== "interface-preview") return null
 
   return (
-    <div
-      aria-label="Stylized OpenFocus interface preview based on the current source code, not a product screenshot"
-      className="relative"
-      role="img"
-    >
+    <div aria-label={visual.ariaLabel} className="relative" role="img">
       <div
         aria-hidden="true"
         className="absolute inset-x-8 top-10 h-52 rounded-full blur-3xl"
@@ -197,12 +228,7 @@ function InterfacePreview({ product }: LandingPageProps) {
               <span className="text-sm font-semibold">{product.name}</span>
             </div>
             <div className="space-y-1.5 text-sm">
-              {[
-                { icon: ListChecks, label: "Today", selected: true },
-                { icon: CalendarClock, label: "Upcoming" },
-                { icon: Inbox, label: "Inbox" },
-                { icon: Folder, label: "Projects" },
-              ].map((item) => (
+              {visual.navItems.map((item) => (
                 <div
                   className={cn(
                     "flex items-center gap-2 rounded-lg px-2.5 py-2",
@@ -222,7 +248,7 @@ function InterfacePreview({ product }: LandingPageProps) {
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
-                  Thursday
+                  {visual.previewEyebrow}
                 </p>
                 <h2 className="mt-1 font-heading text-3xl font-semibold tracking-tight">
                   {visual.previewTitle}
@@ -230,7 +256,7 @@ function InterfacePreview({ product }: LandingPageProps) {
               </div>
               <div className="flex items-center gap-2 rounded-full border bg-background px-3 py-2 text-xs font-medium shadow-sm">
                 <Sparkles className="size-3.5" aria-hidden="true" />
-                Plan my day
+                {visual.previewAction}
               </div>
             </div>
             <div className="mt-7 flex flex-1 flex-col">
@@ -258,10 +284,10 @@ function InterfacePreview({ product }: LandingPageProps) {
                   aria-hidden="true"
                 />
                 <span className="text-sm text-muted-foreground">
-                  Add a task… try “report fri 5pm !!”
+                  {visual.composerPlaceholder}
                 </span>
                 <span className="ml-auto hidden rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background sm:inline-flex">
-                  Add
+                  {visual.composerAction}
                 </span>
               </div>
             </div>
@@ -269,14 +295,13 @@ function InterfacePreview({ product }: LandingPageProps) {
         </div>
       </div>
       <p className="mt-3 text-center text-xs text-muted-foreground">
-        Interface treatment based on the public SwiftUI source. Not a product
-        screenshot.
+        {visual.caption}
       </p>
     </div>
   )
 }
 
-function FeatureSection({ product }: LandingPageProps) {
+function FeatureSection({ product }: ProductProps) {
   return (
     <section id="features" className="border-t bg-muted/30 py-20">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
@@ -309,21 +334,10 @@ function FeatureSection({ product }: LandingPageProps) {
   )
 }
 
-function ProductGallery({ product }: LandingPageProps) {
+function ProductGallery({ product }: ProductProps) {
   if (product.visual.kind !== "screenshots") return null
 
-  const images = [
-    {
-      alt: product.visual.secondaryAlt,
-      src: product.visual.secondaryImage,
-    },
-    product.visual.tertiaryImage && product.visual.tertiaryAlt
-      ? {
-          alt: product.visual.tertiaryAlt,
-          src: product.visual.tertiaryImage,
-        }
-      : null,
-  ].filter((image): image is { alt: string; src: string } => image !== null)
+  const images: LandingImage[] = product.visual.gallery
 
   if (!images.length) return null
 
@@ -333,7 +347,7 @@ function ProductGallery({ product }: LandingPageProps) {
         <div className="flex items-center gap-3">
           <Images className="size-5" aria-hidden="true" />
           <h2 className="font-heading text-2xl font-semibold tracking-[-0.025em] md:text-3xl">
-            Inside {product.name}
+            {product.sections.galleryHeading}
           </h2>
         </div>
         <div
@@ -344,10 +358,13 @@ function ProductGallery({ product }: LandingPageProps) {
               className="overflow-hidden rounded-xl border bg-card shadow-sm"
               key={image.src}
             >
-              <img
+              <Image
                 alt={image.alt}
                 className="h-full max-h-[34rem] w-full object-contain object-top"
+                height={image.height}
+                sizes="(min-width: 768px) 36rem, 100vw"
                 src={image.src}
+                width={image.width}
               />
             </div>
           ))}
@@ -357,7 +374,7 @@ function ProductGallery({ product }: LandingPageProps) {
   )
 }
 
-function AvailabilitySection({ latestVersion, product }: LandingPageProps) {
+function AvailabilitySection({ product, release }: ReleaseProps) {
   return (
     <section id="availability" className="border-t bg-muted/30 py-20">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -382,9 +399,10 @@ function AvailabilitySection({ latestVersion, product }: LandingPageProps) {
               </div>
             ))}
           </div>
+          {product.subscribe ? <SubscribeCard product={product} /> : null}
         </div>
         {product.distribution.kind === "github-release" ? (
-          <ReleaseCard latestVersion={latestVersion} product={product} />
+          <ReleaseCard product={product} release={release} />
         ) : product.distribution.kind === "multi-platform" ? (
           <MultiPlatformCard product={product} />
         ) : (
@@ -395,7 +413,34 @@ function AvailabilitySection({ latestVersion, product }: LandingPageProps) {
   )
 }
 
-function MultiPlatformCard({ product }: LandingPageProps) {
+/**
+ * Pre-launch products cannot convert on a download, so the page asks for the
+ * one thing it can act on later: an address to notify.
+ */
+function SubscribeCard({ product }: ProductProps) {
+  const subscribe = product.subscribe
+
+  if (!subscribe) return null
+
+  return (
+    <Card className="rounded-lg *:rounded-lg">
+      <CardHeader>
+        <CardTitle>{subscribe.heading}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <SubscribeForm copy={subscribe} />
+        <a
+          className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          href={subscribe.fallbackUrl}
+        >
+          {subscribe.fallbackLabel}
+        </a>
+      </CardContent>
+    </Card>
+  )
+}
+
+function MultiPlatformCard({ product }: ProductProps) {
   const distribution = product.distribution
 
   if (distribution.kind !== "multi-platform") return null
@@ -407,7 +452,9 @@ function MultiPlatformCard({ product }: LandingPageProps) {
       icon: Laptop,
       name: "macOS",
       statusLabel: distribution.macOS.statusLabel,
-      url: distribution.macOS.url,
+      // The card CTA goes through the same-origin redirect the hero uses, so
+      // both paths resolve the versioned asset instead of the releases page.
+      url: distribution.primaryUrl,
     },
     {
       actionLabel: distribution.iOS.actionLabel,
@@ -436,12 +483,15 @@ function MultiPlatformCard({ product }: LandingPageProps) {
           <CardContent>
             {platform.url ? (
               <a
-                className={cn(buttonVariants({ size: "lg" }), "w-full")}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  PRIMARY_CTA_CLASS,
+                  "w-full"
+                )}
                 href={platform.url}
               >
                 <Download data-icon="inline-start" />
                 {platform.actionLabel}
-                <ArrowUpRight data-icon="inline-end" />
               </a>
             ) : (
               <button
@@ -463,10 +513,12 @@ function MultiPlatformCard({ product }: LandingPageProps) {
   )
 }
 
-function ReleaseCard({ latestVersion, product }: LandingPageProps) {
+function ReleaseCard({ product, release }: ReleaseProps) {
   const distribution = product.distribution
 
   if (distribution.kind !== "github-release") return null
+
+  const { copy } = distribution
 
   return (
     <Card className="rounded-lg *:rounded-lg">
@@ -474,61 +526,67 @@ function ReleaseCard({ latestVersion, product }: LandingPageProps) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Download className="size-4" aria-hidden="true" />
-            Direct download
+            {copy.cardLabel}
           </div>
-          {latestVersion ? (
-            <Badge variant="secondary">{latestVersion}</Badge>
+          {release ? (
+            <Badge variant="secondary">{release.version}</Badge>
           ) : null}
         </div>
-        <CardDescription>
-          Signed and notarized. Drag to Applications, done.
-        </CardDescription>
+        <CardDescription>{copy.cardDescription}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <a
-            className={cn(buttonVariants({ size: "lg" }))}
-            href={distribution.primaryUrl}
-          >
-            <Download data-icon="inline-start" />
-            {product.primaryCta}
-          </a>
-          <a
-            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
-            href={distribution.releasesUrl}
-          >
-            All releases
-            <ArrowUpRight data-icon="inline-end" />
-          </a>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <a
+              className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
+              href={distribution.primaryUrl}
+            >
+              <Download data-icon="inline-start" />
+              {product.primaryCta}
+            </a>
+            <a
+              className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+              href={distribution.releasesUrl}
+            >
+              {copy.allReleasesLabel}
+              <ArrowUpRight data-icon="inline-end" />
+            </a>
+          </div>
+          <DownloadMeta product={product} release={release} />
         </div>
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Terminal className="size-4" aria-hidden="true" />
-          Prefer Homebrew?
+        <Separator />
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Bot className="size-4" aria-hidden="true" />
+            {copy.agentLabel}
+          </div>
+          <CopyPromptButton
+            label={copy.agentButtonLabel}
+            text={distribution.agentPrompt}
+          />
         </div>
-        <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-4 text-sm leading-7 text-zinc-100 dark:bg-zinc-900">
-          <code>{distribution.installCommand}</code>
-        </pre>
-        <div className="flex items-center gap-2 text-sm font-medium">
-          <Bot className="size-4" aria-hidden="true" />
-          Using Claude Code or Codex?
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Terminal className="size-4" aria-hidden="true" />
+            {copy.homebrewLabel}
+          </div>
+          <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-4 text-sm leading-7 text-zinc-100 dark:bg-zinc-900">
+            <code>{distribution.installCommand}</code>
+          </pre>
         </div>
-        <CopyPromptButton
-          label="Copy prompt for your agent"
-          text={distribution.agentPrompt}
-        />
         <a
           className={cn(buttonVariants({ variant: "outline" }))}
           href={product.repoUrl}
         >
           <GitFork data-icon="inline-start" />
-          GitHub
+          {copy.sourceLabel}
         </a>
       </CardContent>
     </Card>
   )
 }
 
-function PreviewCard({ product }: LandingPageProps) {
+function PreviewCard({ product }: ProductProps) {
   const distribution = product.distribution
 
   if (distribution.kind !== "preview") return null
@@ -539,7 +597,7 @@ function PreviewCard({ product }: LandingPageProps) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-medium">
             <CalendarClock className="size-4" aria-hidden="true" />
-            Current availability
+            {product.sections.availabilityLabel}
           </div>
           <Badge variant="secondary">{distribution.statusLabel}</Badge>
         </div>
@@ -548,7 +606,7 @@ function PreviewCard({ product }: LandingPageProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3 sm:flex-row">
         <a
-          className={cn(buttonVariants({ size: "lg" }))}
+          className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
           href={distribution.primaryActionUrl}
         >
           {distribution.primaryActionLabel}
@@ -565,7 +623,7 @@ function PreviewCard({ product }: LandingPageProps) {
   )
 }
 
-function SiteFooter({ product }: LandingPageProps) {
+function SiteFooter({ product }: ProductProps) {
   return (
     <footer className="border-t py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
@@ -598,37 +656,26 @@ function SiteFooter({ product }: LandingPageProps) {
   )
 }
 
-function HeroActions({ product }: LandingPageProps) {
+function HeroActions({ product }: ProductProps) {
   const distribution = product.distribution
 
   if (distribution.kind === "multi-platform") {
     return (
       <>
         <a
-          className={cn(buttonVariants({ size: "lg" }))}
-          href={distribution.macOS.url}
+          className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
+          href={distribution.primaryUrl}
         >
           <Download data-icon="inline-start" />
           {distribution.macOS.actionLabel}
-          <ArrowUpRight data-icon="inline-end" />
         </a>
-        {distribution.iOS.url ? (
-          <a
-            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
-            href={distribution.iOS.url}
-          >
-            <Smartphone data-icon="inline-start" />
-            {distribution.iOS.actionLabel}
-          </a>
-        ) : (
-          <a
-            className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
-            href="#availability"
-          >
-            <Smartphone data-icon="inline-start" />
-            {distribution.iOS.actionLabel}
-          </a>
-        )}
+        <a
+          className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+          href={distribution.iOS.url ?? "#availability"}
+        >
+          <Smartphone data-icon="inline-start" />
+          {distribution.iOS.actionLabel}
+        </a>
       </>
     )
   }
@@ -636,7 +683,7 @@ function HeroActions({ product }: LandingPageProps) {
   return (
     <>
       <a
-        className={cn(buttonVariants({ size: "lg" }))}
+        className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
         href={distribution.primaryUrl}
       >
         {product.primaryCta}
@@ -653,22 +700,20 @@ function HeroActions({ product }: LandingPageProps) {
   )
 }
 
-function getPrimaryUrl(product: LandingProduct) {
-  return product.distribution.kind === "multi-platform"
-    ? product.distribution.macOS.url
-    : product.distribution.primaryUrl
-}
-
 function ProductMark({
   compact = false,
   product,
-}: LandingPageProps & { compact?: boolean }) {
+}: ProductProps & { compact?: boolean }) {
   if (product.visual.kind === "screenshots") {
     return (
-      <img
+      <Image
         alt=""
         className={cn(compact ? "size-7 rounded-md" : "size-8 rounded-lg")}
-        src={product.visual.logo}
+        // Intrinsic size is pinned at 2x the largest rendered box rather than
+        // the source dimensions, so the optimizer never ships a 512px logo.
+        height={64}
+        src={product.visual.logo.src}
+        width={64}
       />
     )
   }
@@ -687,7 +732,7 @@ function ProductMark({
           compact ? "text-sm" : "text-base"
         )}
       >
-        O
+        {product.visual.markLabel}
       </span>
     </span>
   )

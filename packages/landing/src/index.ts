@@ -1,9 +1,16 @@
 export { redirectToLatestRelease } from "./download"
 export { LandingPage } from "./landing-page"
 export {
+  createLandingMetadata,
+  createLandingRobots,
+  createLandingSitemap,
+} from "./metadata"
+export {
   macSweepLanding,
   meterBarLanding,
   openFocusLanding,
   openTVTrackerLanding,
 } from "./products"
-export type { LandingDistribution, LandingProduct } from "./types"
+export { LandingRootLayout } from "./root-layout"
+export { handleSubscribe } from "./subscribe"
+export type { LandingDistribution, LandingImage, LandingProduct } from "./types"

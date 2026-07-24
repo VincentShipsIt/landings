@@ -1,5 +1,27 @@
 import type { LucideIcon } from "lucide-react"
 
+/**
+ * Bitmap asset rendered through next/image. Intrinsic dimensions are required
+ * so the browser reserves space before the image loads.
+ */
+export type LandingImage = {
+  alt: string
+  height: number
+  src: string
+  width: number
+}
+
+/** Copy for the direct-download card. Shared shape across GitHub-released apps. */
+export type ReleaseCopy = {
+  agentButtonLabel: string
+  agentLabel: string
+  allReleasesLabel: string
+  cardDescription: string
+  cardLabel: string
+  homebrewLabel: string
+  sourceLabel: string
+}
+
 export type LandingDistribution =
   | {
       kind: "github-release"
@@ -12,6 +34,7 @@ export type LandingDistribution =
       installCommand: string
       /** Copyable instruction for coding agents (Claude Code, Codex) to install the app. */
       agentPrompt: string
+      copy: ReleaseCopy
       notes: string[]
     }
   | {
@@ -28,6 +51,11 @@ export type LandingDistribution =
     }
   | {
       kind: "multi-platform"
+      /**
+       * Same-origin CTA target. The matching `/download` route resolves it to
+       * `macOS.url`, which must stay absolute so the redirect cannot loop.
+       */
+      primaryUrl: string
       macOS: {
         actionLabel: string
         description: string
@@ -45,23 +73,44 @@ export type LandingDistribution =
 
 type ScreenshotVisual = {
   kind: "screenshots"
-  logo: string
-  primaryImage: string
-  secondaryImage: string
-  tertiaryImage?: string
-  primaryAlt: string
-  secondaryAlt: string
-  tertiaryAlt?: string
+  logo: LandingImage
+  primary: LandingImage
+  gallery: LandingImage[]
 }
 
 type InterfacePreviewVisual = {
   kind: "interface-preview"
+  /** Letter(s) rendered in the generated product mark. */
+  markLabel: string
+  /** Describes the mock to assistive technology; it is not a screenshot. */
+  ariaLabel: string
+  caption: string
   previewLabel: string
+  previewEyebrow: string
   previewTitle: string
+  previewAction: string
+  composerPlaceholder: string
+  composerAction: string
+  navItems: Array<{
+    icon: LucideIcon
+    label: string
+    selected?: boolean
+  }>
   previewItems: Array<{
     detail: string
     title: string
   }>
+}
+
+/** Email capture shown on pre-launch products that cannot be downloaded yet. */
+export type LandingSubscribe = {
+  buttonLabel: string
+  description: string
+  fallbackLabel: string
+  fallbackUrl: string
+  heading: string
+  placeholder: string
+  successMessage: string
 }
 
 export type LandingProduct = {
@@ -79,10 +128,14 @@ export type LandingProduct = {
   heroCopy: string
   primaryCta: string
   secondaryCta: string
+  /** Shown next to the primary CTA so the OS floor is visible above the fold. */
+  platformRequirement: string
+  ogImage: LandingImage
   visual: ScreenshotVisual | InterfacePreviewVisual
   sections: {
     featureHeading: string
     featureDescription: string
+    galleryHeading: string
     availabilityLabel: string
     availabilityHeading: string
     availabilityDescription: string
@@ -93,5 +146,6 @@ export type LandingProduct = {
     description: string
     icon: LucideIcon
   }>
+  subscribe?: LandingSubscribe
   footerNote: string
 }
