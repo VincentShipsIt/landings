@@ -24,12 +24,12 @@ import type { LandingProduct } from "./types"
 export const meterBarLanding: LandingProduct = {
   name: "MeterBar",
   domain: "meterbar.dev",
-  repoUrl: "https://github.com/VincentShipsIt/meterbar.app",
+  repoUrl: "https://github.com/VincentShipsIt/meterbar.dev",
   distribution: {
     kind: "github-release",
     primaryUrl: "/download",
-    releasesUrl: "https://github.com/VincentShipsIt/meterbar.app/releases",
-    releaseRepo: "VincentShipsIt/meterbar.app",
+    releasesUrl: "https://github.com/VincentShipsIt/meterbar.dev/releases",
+    releaseRepo: "VincentShipsIt/meterbar.dev",
     releaseAssetPattern: String.raw`^MeterBar-v[\d.]+\.zip$`,
     installCommand: "brew install --cask vincentshipsit/tap/meterbar",
     agentPrompt:
