@@ -60,18 +60,40 @@ function redirect(location: string) {
  * single serverless region exhausts quickly. A token lifts the ceiling to
  * 5,000/hour; the endpoint is public, so no token is still a working fallback.
  */
-function releaseHeaders() {
+function releaseHeaders(token?: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   }
-  const token = process.env.GITHUB_TOKEN?.trim()
 
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
 
   return headers
+}
+
+/**
+ * A rejected credential is worse than no credential here: the endpoint is
+ * public, so an expired, revoked, or mistyped token turns a request that would
+ * have succeeded anonymously into a 401. Retrying without the header keeps
+ * downloads working at the unauthenticated 60/hour ceiling instead of sending
+ * every visitor to the releases page.
+ */
+async function fetchRelease(repo: string, init: NextFetchInit) {
+  const token = process.env.GITHUB_TOKEN?.trim()
+  const url = `https://api.github.com/repos/${repo}/releases/latest`
+  const response = await fetch(url, { ...init, headers: releaseHeaders(token) })
+
+  if (token && (response.status === 401 || response.status === 403)) {
+    console.error(
+      `[landing] GITHUB_TOKEN rejected for ${repo} (${response.status}); retrying unauthenticated`
+    )
+
+    return fetch(url, { ...init, headers: releaseHeaders() })
+  }
+
+  return response
 }
 
 async function fetchLatestRelease(
@@ -81,10 +103,7 @@ async function fetchLatestRelease(
   const repo = distribution.releaseRepo
 
   try {
-    const response = await fetch(
-      `https://api.github.com/repos/${repo}/releases/latest`,
-      { ...init, headers: releaseHeaders() }
-    )
+    const response = await fetchRelease(repo, init)
 
     if (!response.ok) {
       console.error(
