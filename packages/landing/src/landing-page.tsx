@@ -566,13 +566,43 @@ function PreviewCard({ product }: ProductProps) {
   )
 }
 
+/**
+ * Renders the byline with the author's name linked to their X profile. The name
+ * is matched against the handle already carried by `xUrl` rather than stored as
+ * its own field, so the two can never drift apart. A byline that does not name
+ * the handle — or a product with no `xUrl` — degrades to plain text.
+ */
+function FooterByline({ product }: ProductProps) {
+  const handle = product.xUrl?.split("/").pop()
+  const segments = handle ? product.footerNote.split(handle) : []
+
+  if (!handle || segments.length < 2) {
+    return <span>{product.footerNote}</span>
+  }
+
+  const [before, ...rest] = segments
+
+  return (
+    <span>
+      {before}
+      <a
+        className="underline-offset-4 hover:text-foreground hover:underline"
+        href={product.xUrl}
+      >
+        {handle}
+      </a>
+      {rest.join(handle)}
+    </span>
+  )
+}
+
 function SiteFooter({ product }: ProductProps) {
   return (
     <footer className="border-t py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <ProductMark product={product} compact />
-          <span>{product.footerNote}</span>
+          <FooterByline product={product} />
         </div>
         <div className="flex items-center gap-4">
           <a
