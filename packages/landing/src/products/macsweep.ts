@@ -6,12 +6,12 @@ import { OG_CARD_DIMENSIONS, RELEASE_COPY } from "./shared"
 export const macSweepLanding: LandingProduct = {
   name: "MacSweep",
   domain: "macsweep.dev",
-  repoUrl: "https://github.com/VincentShipsIt/macsweep",
+  repoUrl: "https://github.com/VincentShipsIt/macsweep.dev",
   distribution: {
     kind: "github-release",
     primaryUrl: "/download",
-    releasesUrl: "https://github.com/VincentShipsIt/macsweep/releases",
-    releaseRepo: "VincentShipsIt/macsweep",
+    releasesUrl: "https://github.com/VincentShipsIt/macsweep.dev/releases",
+    releaseRepo: "VincentShipsIt/macsweep.dev",
     releaseAssetPattern: String.raw`^macsweep-v[\d.]+-macos\.zip$`,
     installCommand: "brew install --cask vincentshipsit/tap/macsweep",
     agentPrompt:
