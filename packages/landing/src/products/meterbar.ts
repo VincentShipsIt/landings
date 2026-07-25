@@ -97,9 +97,88 @@ export const meterBarLanding: LandingProduct = {
     {
       title: "Private by default",
       description:
-        "Credentials stay on the Mac. Nothing is uploaded, and no account is ever created.",
+        "Reuses the sign-ins already on your Mac. No account, no telemetry — and the exact read paths are listed below.",
       icon: LockKeyhole,
     },
   ],
+  privacy: {
+    label: "Privacy",
+    heading: "It reads the sign-ins you already have.",
+    description:
+      "MeterBar has no account, no server of its own, and no telemetry. Every provider it tracks is one you already logged into on this Mac, and it reads that existing session in place — it never asks you for a password and never copies a credential somewhere new. The full list is below, and all of it is checkable in the source.",
+    reads: [
+      {
+        title: "Claude Code",
+        detail:
+          "Reads the OAuth token Claude Code already stored, and sends it only to Anthropic's own usage endpoint. If no token is readable, it falls back to parsing the output of claude /usage instead.",
+        source: "Keychain — Claude Code-credentials",
+      },
+      {
+        title: "Codex CLI",
+        detail:
+          "Reads the token codex login wrote, then calls ChatGPT's own usage endpoint with it. Honors CODEX_HOME when you have moved that directory.",
+        source: "~/.codex/auth.json",
+      },
+      {
+        title: "Cursor",
+        detail:
+          "Queries Cursor's local database for the session token the editor already holds, then reads your monthly usage from cursor.com.",
+        source: "~/Library/Application Support/Cursor",
+      },
+      {
+        title: "Grok",
+        detail:
+          "Checks only whether the login exists. The billing figures come back from the official Grok CLI over its own protocol — MeterBar never reads or stores that token itself.",
+        source: "~/.grok/auth.json",
+      },
+      {
+        title: "Cost scan",
+        detail:
+          "An optional 30-day scan that totals the token-count and model fields in local session transcripts. It never reads prompt or response text, and it makes no network calls at all.",
+        source: "~/.claude/projects, Codex session logs",
+      },
+      {
+        title: "OpenRouter",
+        detail:
+          "The one credential MeterBar stores itself: an API key you paste into Settings, kept in MeterBar's own Keychain item and used only against openrouter.ai.",
+        source: "Keychain — dev.meterbar.app",
+      },
+    ],
+    permissionsHeading: "Prompts macOS will show you",
+    permissions: [
+      {
+        title: "Keychain access, once",
+        detail:
+          "On first launch macOS asks whether MeterBar may read the Claude Code-credentials item. That single read is how Claude usage arrives without a login. Deny it and MeterBar falls back to the CLI, and you can switch the OAuth read off in Settings at any time.",
+      },
+      {
+        title: "Notifications, optional",
+        detail:
+          "Requested once so quota warnings and session-wake alerts can appear. Decline it and every other part of the app keeps working.",
+      },
+      {
+        title: "Login Items, only if you opt in",
+        detail:
+          "Enabling Launch at Login or Session Wake registers a helper through SMAppService, so MeterBar shows up under System Settings → General → Login Items. Both stay off until you turn them on.",
+      },
+      {
+        title: "No Full Disk Access",
+        detail:
+          "MeterBar never requests it. Everything listed above sits in your home directory or your login Keychain, none of which is behind that permission.",
+      },
+    ],
+    guaranteesHeading: "Also true",
+    guarantees: [
+      "No account, no sign-up, and no MeterBar server for anything to be sent to.",
+      "No analytics, no telemetry, no crash reporting.",
+      "Outbound requests go only to your own providers' usage endpoints.",
+      "The widget is sandboxed. The main app is not, because it has to read other tools' files — hardened runtime is enabled for both.",
+      "MIT licensed, so every path listed here can be checked against the source.",
+    ],
+    sourceLink: {
+      href: "https://github.com/VincentShipsIt/meterbar.dev#privacy--security",
+      label: "Check it in the source",
+    },
+  },
   footerNote: "Built by VincentShipsIt. Free, open source, no upsells.",
 }
