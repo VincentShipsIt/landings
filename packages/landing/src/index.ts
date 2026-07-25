@@ -14,6 +14,7 @@ export {
 export { LandingRootLayout } from "./root-layout"
 export type {
   LandingDistribution,
+  LandingFeatureStory,
   LandingImage,
   LandingPrivacy,
   LandingProduct,
