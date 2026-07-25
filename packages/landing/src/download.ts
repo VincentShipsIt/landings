@@ -3,10 +3,15 @@ import type { LandingDistribution, LandingProduct } from "./types"
 type GitHubRelease = {
   assets?: Array<{
     browser_download_url?: unknown
+    download_count?: unknown
     name?: unknown
     size?: unknown
   }>
   tag_name?: unknown
+}
+
+type GitHubRepo = {
+  stargazers_count?: unknown
 }
 
 export type LatestRelease = {
@@ -16,12 +21,35 @@ export type LatestRelease = {
   version: string
 }
 
+export type SocialProof = {
+  /** Cumulative release asset downloads, or null when it fails the floor below. */
+  downloads: number | null
+  /** Repository stargazers, or null when it fails the floor below. */
+  stars: number | null
+}
+
 type NextFetchInit = RequestInit & {
   next?: { revalidate: number }
 }
 
 const NON_MAC_PLATFORM = /Android|CrOS|iPad|iPhone|Linux|Windows/i
 const MAC_PLATFORM = /Macintosh|Mac OS X/i
+
+/**
+ * Credibility floors for the hero stats. Weak social proof argues *against* the
+ * product — a single-digit star count reads as "nobody uses this", and a
+ * two-digit download total reads as "nobody installs this" — so anything under
+ * these bars is dropped and the badge simply never renders.
+ */
+const MIN_DOWNLOADS = 250
+const MIN_STARS = 25
+
+/**
+ * Stars and download totals move on the order of days, so they get a far wider
+ * window than the release lookup. That also keeps the two extra API calls per
+ * repo from eating into the unauthenticated 60/hour ceiling.
+ */
+const SOCIAL_PROOF_REVALIDATE = 3600
 
 function isMacRequest(request: Request) {
   const clientPlatform = request.headers
@@ -60,7 +88,7 @@ function redirect(location: string) {
  * single serverless region exhausts quickly. A token lifts the ceiling to
  * 5,000/hour; the endpoint is public, so no token is still a working fallback.
  */
-function releaseHeaders(token?: string) {
+function githubHeaders(token?: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
@@ -74,23 +102,23 @@ function releaseHeaders(token?: string) {
 }
 
 /**
- * A rejected credential is worse than no credential here: the endpoint is
+ * A rejected credential is worse than no credential here: these endpoints are
  * public, so an expired, revoked, or mistyped token turns a request that would
  * have succeeded anonymously into a 401. Retrying without the header keeps
  * downloads working at the unauthenticated 60/hour ceiling instead of sending
  * every visitor to the releases page.
  */
-async function fetchRelease(repo: string, init: NextFetchInit) {
+async function fetchGitHub(path: string, init: NextFetchInit) {
   const token = process.env.GITHUB_TOKEN?.trim()
-  const url = `https://api.github.com/repos/${repo}/releases/latest`
-  const response = await fetch(url, { ...init, headers: releaseHeaders(token) })
+  const url = `https://api.github.com${path}`
+  const response = await fetch(url, { ...init, headers: githubHeaders(token) })
 
   if (token && (response.status === 401 || response.status === 403)) {
     console.error(
-      `[landing] GITHUB_TOKEN rejected for ${repo} (${response.status}); retrying unauthenticated`
+      `[landing] GITHUB_TOKEN rejected for ${path} (${response.status}); retrying unauthenticated`
     )
 
-    return fetch(url, { ...init, headers: releaseHeaders() })
+    return fetch(url, { ...init, headers: githubHeaders() })
   }
 
   return response
@@ -103,7 +131,7 @@ async function fetchLatestRelease(
   const repo = distribution.releaseRepo
 
   try {
-    const response = await fetchRelease(repo, init)
+    const response = await fetchGitHub(`/repos/${repo}/releases/latest`, init)
 
     if (!response.ok) {
       console.error(
@@ -173,6 +201,108 @@ export function getLatestRelease(product: LandingProduct) {
 
   return fetchLatestRelease(product.distribution, {
     next: { revalidate: 300 },
+  })
+}
+
+/** Keeps a count only when GitHub reported a real number that clears its floor. */
+function qualifyingCount(count: unknown, minimum: number) {
+  if (typeof count !== "number" || !Number.isFinite(count)) return null
+
+  return count >= minimum ? count : null
+}
+
+async function fetchStars(repo: string, init: NextFetchInit) {
+  try {
+    const response = await fetchGitHub(`/repos/${repo}`, init)
+
+    if (!response.ok) {
+      console.error(
+        `[landing] GitHub repo lookup failed for ${repo}: ${response.status} ${response.statusText}`
+      )
+
+      return null
+    }
+
+    const repository = (await response.json()) as GitHubRepo
+
+    return qualifyingCount(repository.stargazers_count, MIN_STARS)
+  } catch (error) {
+    console.error(`[landing] GitHub repo lookup threw for ${repo}:`, error)
+
+    return null
+  }
+}
+
+async function fetchDownloads(repo: string, init: NextFetchInit) {
+  try {
+    // A single page of 100 covers every release these products have published.
+    // A repo that outgrows it undercounts instead of failing, which is the safe
+    // direction for a stat that only ever needs to be defensible.
+    const response = await fetchGitHub(
+      `/repos/${repo}/releases?per_page=100`,
+      init
+    )
+
+    if (!response.ok) {
+      console.error(
+        `[landing] GitHub release list failed for ${repo}: ${response.status} ${response.statusText}`
+      )
+
+      return null
+    }
+
+    const releases = (await response.json()) as GitHubRelease[]
+
+    if (!Array.isArray(releases)) {
+      console.error(
+        `[landing] GitHub release list for ${repo} was not an array`
+      )
+
+      return null
+    }
+
+    const total = releases
+      .flatMap((release) => release.assets ?? [])
+      .reduce(
+        (sum, asset) =>
+          sum +
+          (typeof asset.download_count === "number" ? asset.download_count : 0),
+        0
+      )
+
+    return qualifyingCount(total, MIN_DOWNLOADS)
+  } catch (error) {
+    console.error(`[landing] GitHub release list threw for ${repo}:`, error)
+
+    return null
+  }
+}
+
+/**
+ * Both stats are independent: a rate-limited or failed call nulls only its own
+ * number, and nothing at all is returned when neither survives. Callers render
+ * whatever comes back and nothing when it is null — never a zero, a skeleton,
+ * or an error state.
+ */
+async function fetchSocialProof(
+  repo: string,
+  init: NextFetchInit
+): Promise<SocialProof | null> {
+  const [downloads, stars] = await Promise.all([
+    fetchDownloads(repo, init),
+    fetchStars(repo, init),
+  ])
+
+  if (downloads === null && stars === null) return null
+
+  return { downloads, stars }
+}
+
+export function getSocialProof(product: LandingProduct) {
+  if (product.distribution.kind !== "github-release") return null
+
+  return fetchSocialProof(product.distribution.releaseRepo, {
+    next: { revalidate: SOCIAL_PROOF_REVALIDATE },
   })
 }
 
