@@ -128,11 +128,18 @@ async function fetchLatestRelease(
     }
 
     const downloadUrl = asset.browser_download_url
-    const expectedPrefix = `https://github.com/${repo}/releases/download/`
+
+    // Renaming a repo makes GitHub answer the old path with a 301, so the
+    // release comes back fine but its assets carry the *new* name. Pinning the
+    // whole `owner/repo` here failed shut on every rename. Pin the owner
+    // instead — that is the part the config can actually vouch for, and it
+    // still rejects assets hosted outside this account.
+    const expectedPrefix = `https://github.com/${repo.split("/")[0]}/`
 
     if (
       typeof downloadUrl !== "string" ||
-      !downloadUrl.startsWith(expectedPrefix)
+      !downloadUrl.startsWith(expectedPrefix) ||
+      !downloadUrl.includes("/releases/download/")
     ) {
       console.error(
         `[landing] Rejected ${repo} asset URL outside ${expectedPrefix}: ${String(downloadUrl)}`
