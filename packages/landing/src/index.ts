@@ -12,5 +12,4 @@ export {
   openTVTrackerLanding,
 } from "./products"
 export { LandingRootLayout } from "./root-layout"
-export { handleSubscribe } from "./subscribe"
 export type { LandingDistribution, LandingImage, LandingProduct } from "./types"

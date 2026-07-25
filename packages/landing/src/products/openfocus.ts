@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 
 import type { LandingProduct } from "../types"
-import { OG_CARD_DIMENSIONS, SUBSCRIBE_PLACEHOLDER } from "./shared"
+import { OG_CARD_DIMENSIONS } from "./shared"
 
 export const openFocusLanding: LandingProduct = {
   name: "OpenFocus",
@@ -142,15 +142,5 @@ export const openFocusLanding: LandingProduct = {
       icon: ShieldCheck,
     },
   ],
-  subscribe: {
-    buttonLabel: "Notify me",
-    description:
-      "One email when the first macOS release and the iPhone beta go live.",
-    fallbackLabel: "Or watch the repository on GitHub",
-    fallbackUrl: "https://github.com/VincentShipsIt/openfocusdev",
-    heading: "Get the first release",
-    placeholder: SUBSCRIBE_PLACEHOLDER,
-    successMessage: "You are on the list. Watch for the first release.",
-  },
   footerNote: "Built by VincentShipsIt. Native, open source, and local-first.",
 }

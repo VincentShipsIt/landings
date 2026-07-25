@@ -102,17 +102,6 @@ type InterfacePreviewVisual = {
   }>
 }
 
-/** Email capture shown on pre-launch products that cannot be downloaded yet. */
-export type LandingSubscribe = {
-  buttonLabel: string
-  description: string
-  fallbackLabel: string
-  fallbackUrl: string
-  heading: string
-  placeholder: string
-  successMessage: string
-}
-
 export type LandingProduct = {
   name: string
   domain: string
@@ -146,6 +135,5 @@ export type LandingProduct = {
     description: string
     icon: LucideIcon
   }>
-  subscribe?: LandingSubscribe
   footerNote: string
 }

@@ -32,7 +32,6 @@ import { CopyPromptButton } from "./copy-prompt-button"
 import { PRIMARY_CTA_CLASS } from "./cta"
 import { getLatestRelease, type LatestRelease } from "./download"
 import { formatFileSize } from "./format"
-import { SubscribeForm } from "./subscribe-form"
 import type { LandingImage, LandingProduct } from "./types"
 
 type ProductProps = {
@@ -399,7 +398,6 @@ function AvailabilitySection({ product, release }: ReleaseProps) {
               </div>
             ))}
           </div>
-          {product.subscribe ? <SubscribeCard product={product} /> : null}
         </div>
         {product.distribution.kind === "github-release" ? (
           <ReleaseCard product={product} release={release} />
@@ -410,33 +408,6 @@ function AvailabilitySection({ product, release }: ReleaseProps) {
         )}
       </div>
     </section>
-  )
-}
-
-/**
- * Pre-launch products cannot convert on a download, so the page asks for the
- * one thing it can act on later: an address to notify.
- */
-function SubscribeCard({ product }: ProductProps) {
-  const subscribe = product.subscribe
-
-  if (!subscribe) return null
-
-  return (
-    <Card className="rounded-lg *:rounded-lg">
-      <CardHeader>
-        <CardTitle>{subscribe.heading}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        <SubscribeForm copy={subscribe} />
-        <a
-          className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          href={subscribe.fallbackUrl}
-        >
-          {subscribe.fallbackLabel}
-        </a>
-      </CardContent>
-    </Card>
   )
 }
 

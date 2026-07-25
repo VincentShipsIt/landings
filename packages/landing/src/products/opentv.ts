@@ -8,7 +8,7 @@ import {
 } from "lucide-react"
 
 import type { LandingProduct } from "../types"
-import { OG_CARD_DIMENSIONS, SUBSCRIBE_PLACEHOLDER } from "./shared"
+import { OG_CARD_DIMENSIONS } from "./shared"
 
 export const openTVTrackerLanding: LandingProduct = {
   name: "OpenTV Tracker",
@@ -129,15 +129,6 @@ export const openTVTrackerLanding: LandingProduct = {
       icon: Cloud,
     },
   ],
-  subscribe: {
-    buttonLabel: "Notify me",
-    description: "One email when TestFlight invitations open. Nothing else.",
-    fallbackLabel: "Or follow the TestFlight issue on GitHub",
-    fallbackUrl: "https://github.com/VincentShipsIt/opentvtracker/issues/46",
-    heading: "Get the TestFlight invite",
-    placeholder: SUBSCRIBE_PLACEHOLDER,
-    successMessage: "You are on the list. Watch for the TestFlight invite.",
-  },
   footerNote:
     "Built by VincentShipsIt. Open source, private by default, no public activity feed.",
 }

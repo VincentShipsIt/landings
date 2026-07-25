@@ -14,7 +14,4 @@ export const RELEASE_COPY: ReleaseCopy = {
   sourceLabel: "GitHub",
 }
 
-/** Placeholder shared by every launch-notification form. */
-export const SUBSCRIBE_PLACEHOLDER = "you@example.com"
-
 export const OG_CARD_DIMENSIONS = { height: 630, width: 1200 }
