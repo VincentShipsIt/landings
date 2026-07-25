@@ -42,26 +42,65 @@ export const meterBarLanding: LandingProduct = {
     src: "/og-card.png",
   },
   visual: {
-    kind: "screenshots",
+    kind: "menubar-preview",
     logo: {
       alt: "",
       height: 512,
       src: "/product/logo.png",
       width: 512,
     },
-    primary: {
-      alt: "MeterBar overview window tracking Codex, Claude, and Cursor usage limits",
-      height: 700,
-      src: "/product/overview.png",
-      width: 1040,
-    },
+    ariaLabel:
+      "Mock of the MeterBar menu bar dropdown, showing a Codex account with 93% of the session window and 17% of the weekly window left, plus reset countdowns.",
+    caption:
+      "Illustrative data — MeterBar reads live usage from the providers already signed in on your Mac.",
+    menuBarClock: "Thu 9:41 AM",
+    menuBarStatus: "17%",
+    accountName: "Codex",
+    accountPlan: "Pro",
+    updatedLabel: "Updated just now",
+    windows: [
+      {
+        label: "Session",
+        remaining: 93,
+        state: "healthy",
+        resetLabel: "Session reset in 2h 49m",
+      },
+      {
+        label: "Weekly",
+        remaining: 17,
+        state: "tight",
+        resetLabel: "Weekly reset in 3h 49m",
+        note: "1 reset available",
+      },
+    ],
+    stats: [
+      { label: "Tightest window", value: "17% left" },
+      { label: "30-day tokens", value: "32.6B" },
+      { label: "Tracked sources", value: "3" },
+    ],
     gallery: [
+      {
+        alt: "MeterBar overview window tracking Codex, Claude, and Cursor usage limits",
+        height: 700,
+        src: "/product/overview.png",
+        width: 1040,
+      },
       {
         alt: "MeterBar macOS widget showing quota usage",
         height: 436,
         src: "/product/widget-medium.png",
         width: 776,
       },
+    ],
+  },
+  providers: {
+    heading: "Three providers, read locally.",
+    description:
+      "MeterBar reads the auth and usage state these tools already keep on your Mac. Nothing new to sign into.",
+    items: [
+      { name: "Claude Code", detail: "Session and weekly windows" },
+      { name: "Codex CLI", detail: "Session, weekly, and reset credits" },
+      { name: "Cursor", detail: "Local auth and usage state" },
     ],
   },
   sections: {

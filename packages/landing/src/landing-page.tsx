@@ -12,27 +12,32 @@ import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowUpRight,
+  BatteryFull,
   Bot,
   CalendarClock,
   ChevronRight,
   Circle,
+  Clock,
   Download,
   GitFork,
   Images,
   Laptop,
   Plus,
+  RefreshCw,
   Sparkles,
   Smartphone,
   Terminal,
+  Wifi,
 } from "lucide-react"
 import Image from "next/image"
 import type { CSSProperties } from "react"
 
+import { CopyCommandButton } from "./copy-command-button"
 import { CopyPromptButton } from "./copy-prompt-button"
 import { PRIMARY_CTA_CLASS } from "./cta"
 import { getLatestRelease, type LatestRelease } from "./download"
 import { formatFileSize } from "./format"
-import type { LandingImage, LandingProduct } from "./types"
+import type { LandingImage, LandingProduct, MenuBarWindowState } from "./types"
 
 type ProductProps = {
   product: LandingProduct
@@ -62,6 +67,7 @@ export async function LandingPage({ product }: ProductProps) {
     >
       <SiteHeader product={product} />
       <Hero product={product} release={release} />
+      <ProviderSection product={product} />
       <FeatureSection product={product} />
       <ProductGallery product={product} />
       <AvailabilitySection product={product} release={release} />
@@ -84,6 +90,14 @@ function SiteHeader({ product }: ProductProps) {
           aria-label="Main navigation"
           className="hidden items-center gap-6 text-sm text-muted-foreground md:flex"
         >
+          {product.providers ? (
+            <a
+              className="transition-colors hover:text-foreground"
+              href="#providers"
+            >
+              Coverage
+            </a>
+          ) : null}
           <a
             className="transition-colors hover:text-foreground"
             href="#features"
@@ -145,6 +159,7 @@ function Hero({ product, release }: ReleaseProps) {
             <div className="flex flex-col gap-3 sm:flex-row">
               <HeroActions product={product} />
             </div>
+            <HeroInstallCommand product={product} />
             <DownloadMeta product={product} release={release} />
           </div>
         </div>
@@ -170,9 +185,31 @@ function DownloadMeta({ product, release }: ReleaseProps) {
   return <p className="text-sm text-muted-foreground">{parts.join(" · ")}</p>
 }
 
+/**
+ * Package-manager users can install without ever reaching the availability
+ * section, so the one-liner is repeated above the fold.
+ */
+function HeroInstallCommand({ product }: ProductProps) {
+  if (product.distribution.kind !== "github-release") return null
+
+  return <CopyCommandButton command={product.distribution.installCommand} />
+}
+
+/**
+ * Screenshot galleries are optional per visual kind, so the union is narrowed
+ * in one place rather than at each call site.
+ */
+function getVisualGallery(visual: LandingProduct["visual"]): LandingImage[] {
+  return visual.kind === "interface-preview" ? [] : visual.gallery
+}
+
 function ProductVisual({ product }: ProductProps) {
   if (product.visual.kind === "interface-preview") {
     return <InterfacePreview product={product} />
+  }
+
+  if (product.visual.kind === "menubar-preview") {
+    return <MenuBarPreview product={product} />
   }
 
   const { primary } = product.visual
@@ -300,6 +337,155 @@ function InterfacePreview({ product }: ProductProps) {
   )
 }
 
+const METER_FILL: Record<MenuBarWindowState, string> = {
+  critical: "bg-red-500",
+  healthy: "bg-[var(--product-accent)]",
+  tight: "bg-amber-500",
+}
+
+const METER_TEXT: Record<MenuBarWindowState, string> = {
+  critical: "text-red-600 dark:text-red-400",
+  healthy: "text-foreground",
+  tight: "text-amber-600 dark:text-amber-400",
+}
+
+/**
+ * Coded mock of the menu bar dropdown. A screenshot of a menu bar app is mostly
+ * empty desktop, so the interface is rebuilt at hero scale instead.
+ */
+function MenuBarPreview({ product }: ProductProps) {
+  const visual = product.visual
+
+  if (visual.kind !== "menubar-preview") return null
+
+  return (
+    <div aria-label={visual.ariaLabel} className="relative" role="img">
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-8 top-10 h-52 rounded-full blur-3xl"
+        style={{ backgroundColor: "var(--product-accent-soft)" }}
+      />
+      <div className="relative overflow-hidden rounded-2xl border bg-card shadow-2xl shadow-black/10">
+        <div className="flex h-9 items-center gap-3 border-b bg-muted/50 px-4 text-xs">
+          <span
+            aria-hidden="true"
+            className="ml-auto flex items-center gap-2.5 text-muted-foreground/50"
+          >
+            <Wifi className="size-3.5" />
+            <BatteryFull className="size-3.5" />
+          </span>
+          <span className="flex items-center gap-1.5 rounded-md bg-background px-2 py-1 font-medium shadow-sm ring-1 ring-border">
+            <Image
+              alt=""
+              className="size-4 rounded-sm"
+              height={32}
+              src={visual.logo.src}
+              width={32}
+            />
+            {visual.menuBarStatus}
+          </span>
+          <span className="text-muted-foreground">{visual.menuBarClock}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-semibold">
+                {visual.accountName}
+              </p>
+              <Badge variant="secondary">{visual.accountPlan}</Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {visual.updatedLabel}
+            </p>
+          </div>
+          <RefreshCw
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        </div>
+        <div className="divide-y">
+          {visual.windows.map((meter) => (
+            <div className="px-5 py-4" key={meter.label}>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-muted-foreground">{meter.label}</p>
+                <p
+                  className={cn(
+                    "text-sm font-semibold tabular-nums",
+                    METER_TEXT[meter.state]
+                  )}
+                >
+                  {meter.remaining}% left
+                </p>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn("h-full rounded-full", METER_FILL[meter.state])}
+                  style={{ width: `${meter.remaining}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Clock aria-hidden="true" className="size-3.5" />
+                  {meter.resetLabel}
+                </span>
+                {meter.note ? <span>{meter.note}</span> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-px border-t bg-border">
+          {visual.stats.map((stat) => (
+            <div className="bg-card px-5 py-4" key={stat.label}>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="mt-1 text-sm font-semibold tabular-nums">
+                {stat.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        {visual.caption}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Coverage strip. "Does it support my tool?" is the first question about an
+ * integration utility, so it answers above the feature grid.
+ */
+function ProviderSection({ product }: ProductProps) {
+  const providers = product.providers
+
+  if (!providers) return null
+
+  return (
+    <section id="providers" className="border-t py-20">
+      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5">
+        <div className="max-w-2xl">
+          <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
+            {providers.heading}
+          </h2>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
+            {providers.description}
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {providers.items.map((item) => (
+            <div className="rounded-lg border px-4 py-3.5" key={item.name}>
+              <p className="text-sm font-medium">{item.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {item.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function FeatureSection({ product }: ProductProps) {
   return (
     <section id="features" className="border-t bg-muted/30 py-20">
@@ -334,9 +520,7 @@ function FeatureSection({ product }: ProductProps) {
 }
 
 function ProductGallery({ product }: ProductProps) {
-  if (product.visual.kind !== "screenshots") return null
-
-  const images: LandingImage[] = product.visual.gallery
+  const images = getVisualGallery(product.visual)
 
   if (!images.length) return null
 
@@ -675,36 +859,40 @@ function ProductMark({
   compact = false,
   product,
 }: ProductProps & { compact?: boolean }) {
-  if (product.visual.kind === "screenshots") {
+  const visual = product.visual
+
+  // Only the fully synthetic preview lacks a real logo; it falls back to a
+  // generated letter mark.
+  if (visual.kind === "interface-preview") {
     return (
-      <Image
-        alt=""
-        className={cn(compact ? "size-7 rounded-md" : "size-8 rounded-lg")}
-        // Intrinsic size is pinned at 2x the largest rendered box rather than
-        // the source dimensions, so the optimizer never ships a 512px logo.
-        height={64}
-        src={product.visual.logo.src}
-        width={64}
-      />
+      <span
+        aria-hidden="true"
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center bg-[var(--product-accent)] text-white shadow-sm",
+          compact ? "size-7 rounded-md" : "size-8 rounded-lg"
+        )}
+      >
+        <span
+          className={cn(
+            "font-heading leading-none font-semibold",
+            compact ? "text-sm" : "text-base"
+          )}
+        >
+          {visual.markLabel}
+        </span>
+      </span>
     )
   }
 
   return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center bg-[var(--product-accent)] text-white shadow-sm",
-        compact ? "size-7 rounded-md" : "size-8 rounded-lg"
-      )}
-    >
-      <span
-        className={cn(
-          "font-heading leading-none font-semibold",
-          compact ? "text-sm" : "text-base"
-        )}
-      >
-        {product.visual.markLabel}
-      </span>
-    </span>
+    <Image
+      alt=""
+      className={cn(compact ? "size-7 rounded-md" : "size-8 rounded-lg")}
+      // Intrinsic size is pinned at 2x the largest rendered box rather than
+      // the source dimensions, so the optimizer never ships a 512px logo.
+      height={64}
+      src={visual.logo.src}
+      width={64}
+    />
   )
 }
