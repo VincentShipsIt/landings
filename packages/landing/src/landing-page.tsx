@@ -23,6 +23,7 @@ import {
   Plus,
   Sparkles,
   Smartphone,
+  Star,
   Terminal,
 } from "lucide-react"
 import Image from "next/image"
@@ -30,8 +31,13 @@ import type { CSSProperties } from "react"
 
 import { CopyPromptButton } from "./copy-prompt-button"
 import { PRIMARY_CTA_CLASS } from "./cta"
-import { getLatestRelease, type LatestRelease } from "./download"
-import { formatFileSize } from "./format"
+import {
+  getLatestRelease,
+  getSocialProof,
+  type LatestRelease,
+  type SocialProof,
+} from "./download"
+import { formatCount, formatFileSize } from "./format"
 import type { LandingImage, LandingProduct } from "./types"
 
 type ProductProps = {
@@ -43,8 +49,19 @@ type ReleaseProps = ProductProps & {
   release: LatestRelease | null
 }
 
+type HeroProps = ReleaseProps & {
+  /**
+   * GitHub stars and downloads, or null when the product is not distributed
+   * through releases, the lookup failed, or nothing cleared its floor.
+   */
+  socialProof: SocialProof | null
+}
+
 export async function LandingPage({ product }: ProductProps) {
-  const release = await getLatestRelease(product)
+  const [release, socialProof] = await Promise.all([
+    getLatestRelease(product),
+    getSocialProof(product),
+  ])
 
   return (
     <main
@@ -61,7 +78,7 @@ export async function LandingPage({ product }: ProductProps) {
       }
     >
       <SiteHeader product={product} />
-      <Hero product={product} release={release} />
+      <Hero product={product} release={release} socialProof={socialProof} />
       <FeatureSection product={product} />
       <ProductGallery product={product} />
       <AvailabilitySection product={product} release={release} />
@@ -118,7 +135,7 @@ function SiteHeader({ product }: ProductProps) {
   )
 }
 
-function Hero({ product, release }: ReleaseProps) {
+function Hero({ product, release, socialProof }: HeroProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
@@ -127,6 +144,7 @@ function Hero({ product, release }: ReleaseProps) {
             {release ? (
               <Badge variant="outline">Latest {release.version}</Badge>
             ) : null}
+            <SocialProofBadges socialProof={socialProof} />
             {product.proof.map((item) => (
               <Badge key={item} variant="secondary">
                 {item}
@@ -151,6 +169,36 @@ function Hero({ product, release }: ReleaseProps) {
         <ProductVisual product={product} />
       </div>
     </section>
+  )
+}
+
+/**
+ * Measured proof sitting beside the static claims: the numbers are what the
+ * competing pages in this niche never show. Everything here is best-effort —
+ * an unavailable, rate-limited, or unconvincingly small count arrives as null
+ * and renders nothing at all, never a zero, a skeleton, or an error.
+ */
+function SocialProofBadges({ socialProof }: Pick<HeroProps, "socialProof">) {
+  if (!socialProof) return null
+
+  const downloads = formatCount(socialProof.downloads)
+  const stars = formatCount(socialProof.stars)
+
+  return (
+    <>
+      {stars ? (
+        <Badge variant="secondary">
+          <Star aria-hidden="true" data-icon="inline-start" />
+          {stars} GitHub stars
+        </Badge>
+      ) : null}
+      {downloads ? (
+        <Badge variant="secondary">
+          <Download aria-hidden="true" data-icon="inline-start" />
+          {downloads} downloads
+        </Badge>
+      ) : null}
+    </>
   )
 }
 
