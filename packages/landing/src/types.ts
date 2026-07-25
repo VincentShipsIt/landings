@@ -102,6 +102,43 @@ type InterfacePreviewVisual = {
   }>
 }
 
+/** Tone applied to a usage meter, driven by how much quota is left. */
+export type MenuBarWindowState = "critical" | "healthy" | "tight"
+
+type MenuBarStat = { label: string; value: string }
+
+type MenuBarPreviewVisual = {
+  kind: "menubar-preview"
+  /** Real logo, still used for the header and footer product mark. */
+  logo: LandingImage
+  /** Describes the mock to assistive technology; it is not a screenshot. */
+  ariaLabel: string
+  caption: string
+  /** Text shown in the faux macOS menu bar's clock slot. */
+  menuBarClock: string
+  /** Compact status the app itself paints into the menu bar, e.g. "17%". */
+  menuBarStatus: string
+  accountName: string
+  accountPlan: string
+  updatedLabel: string
+  windows: Array<{
+    label: string
+    /** Percentage of quota remaining, 0-100. Drives bar width and tone. */
+    remaining: number
+    state: MenuBarWindowState
+    resetLabel: string
+    note?: string
+  }>
+  /**
+   * Exactly three, pinned to the footer's fixed three-column grid. Any other
+   * count would wrap into an orphaned cell, which the grid's hairline gaps
+   * render as stray borders rather than an obvious layout mistake.
+   */
+  stats: [MenuBarStat, MenuBarStat, MenuBarStat]
+  /** Real screenshots, still rendered in the gallery below the fold. */
+  gallery: LandingImage[]
+}
+
 /**
  * Trust section for products whose core job is reading local credential or
  * provider state, where a generic "nothing is uploaded" line is the weakest
@@ -154,7 +191,16 @@ export type LandingProduct = {
   /** Shown next to the primary CTA so the OS floor is visible above the fold. */
   platformRequirement: string
   ogImage: LandingImage
-  visual: ScreenshotVisual | InterfacePreviewVisual
+  visual: ScreenshotVisual | InterfacePreviewVisual | MenuBarPreviewVisual
+  /**
+   * Coverage strip listing the tools the app reads. Omitted for products that
+   * do not integrate with anything.
+   */
+  providers?: {
+    heading: string
+    description: string
+    items: Array<{ name: string; detail: string }>
+  }
   sections: {
     featureHeading: string
     featureDescription: string
