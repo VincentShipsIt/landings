@@ -333,7 +333,7 @@ function PrivacySection({ product }: ProductProps) {
     <section id="privacy" className="border-t py-20">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
         <div className="max-w-3xl">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--product-accent-ink)]">
+          <div className="flex items-center gap-2 text-sm font-medium">
             <ShieldCheck className="size-4" aria-hidden="true" />
             {privacy.label}
           </div>
@@ -386,7 +386,7 @@ function PrivacySection({ product }: ProductProps) {
                   key={guarantee}
                 >
                   <Check
-                    className="mt-1 size-4 shrink-0 text-[var(--product-accent-ink)]"
+                    className="mt-1 size-4 shrink-0 text-muted-foreground"
                     aria-hidden="true"
                   />
                   <span>{guarantee}</span>
