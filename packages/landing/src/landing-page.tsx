@@ -26,10 +26,9 @@ import {
   Terminal,
 } from "lucide-react"
 import Image from "next/image"
-import type { CSSProperties, ReactNode } from "react"
+import type { ReactNode } from "react"
 
 import { CopyPromptButton } from "./copy-prompt-button"
-import { PRIMARY_CTA_CLASS } from "./cta"
 import { getLatestRelease, type LatestRelease } from "./download"
 import { formatFileSize } from "./format"
 import type {
@@ -60,19 +59,19 @@ const FEATURE_STORY_MOCK_CLASS = {
 } as const
 
 const FEATURE_MOCK_METER_CLASS = {
-  accent: "h-full rounded-full bg-[var(--product-accent)]",
+  accent: "h-full rounded-full bg-foreground",
   neutral: "h-full rounded-full bg-muted-foreground/40",
   warning: "h-full rounded-full bg-amber-500",
 } as const
 
 const FEATURE_MOCK_DOT_CLASS = {
-  accent: "size-2 shrink-0 rounded-full bg-[var(--product-accent)]",
+  accent: "size-2 shrink-0 rounded-full bg-foreground",
   neutral: "size-2 shrink-0 rounded-full bg-muted-foreground/40",
   warning: "size-2 shrink-0 rounded-full bg-amber-500",
 } as const
 
 const FEATURE_MOCK_STATUS_CLASS = {
-  accent: "text-[var(--product-accent-ink)] dark:text-[var(--product-accent)]",
+  accent: "text-foreground",
   neutral: "text-muted-foreground",
   warning: "text-amber-600 dark:text-amber-400",
 } as const
@@ -102,19 +101,7 @@ export async function LandingPage({ product }: ProductProps) {
   const release = await getLatestRelease(product)
 
   return (
-    <main
-      className="min-h-svh bg-background text-foreground"
-      style={
-        {
-          "--product-accent": product.accent,
-          // Accents sit around L 0.67, which is too light for white button text.
-          // Darkening keeps the brand hue while clearing WCAG AA.
-          "--product-accent-ink":
-            "color-mix(in oklab, var(--product-accent), black 16%)",
-          "--product-accent-soft": product.accentSoft,
-        } as CSSProperties
-      }
-    >
+    <main className="min-h-svh bg-background text-foreground">
       <SiteHeader product={product} />
       <Hero product={product} release={release} />
       <FeatureSection product={product} />
@@ -161,7 +148,7 @@ function SiteHeader({ product }: ProductProps) {
         <div className="flex items-center gap-1.5">
           <ThemeToggle />
           <a
-            className={cn(buttonVariants({ size: "sm" }), PRIMARY_CTA_CLASS)}
+            className={buttonVariants({ size: "sm" })}
             href={product.distribution.primaryUrl}
           >
             {product.primaryCta}
@@ -234,11 +221,6 @@ function ProductVisual({ product }: ProductProps) {
 
   return (
     <div className="relative">
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-8 top-10 h-40 rounded-full blur-3xl"
-        style={{ backgroundColor: "var(--product-accent-soft)" }}
-      />
       <div className="relative mx-auto w-fit overflow-hidden rounded-xl border bg-card shadow-sm">
         <Image
           alt={primary.alt}
@@ -261,11 +243,6 @@ function InterfacePreview({ product }: ProductProps) {
 
   return (
     <div aria-label={visual.ariaLabel} className="relative" role="img">
-      <div
-        aria-hidden="true"
-        className="absolute inset-x-8 top-10 h-52 rounded-full blur-3xl"
-        style={{ backgroundColor: "var(--product-accent-soft)" }}
-      />
       <div className="relative overflow-hidden rounded-3xl border bg-card/95 shadow-2xl shadow-black/10">
         <div className="flex h-11 items-center gap-2 border-b bg-muted/50 px-4">
           <span className="size-2.5 rounded-full bg-red-400/70" />
@@ -318,7 +295,7 @@ function InterfacePreview({ product }: ProductProps) {
                 {visual.previewItems.map((item) => (
                   <div className="flex items-start gap-3 py-4" key={item.title}>
                     <Circle
-                      className="mt-0.5 size-5 shrink-0 text-[var(--product-accent)]"
+                      className="mt-0.5 size-5 shrink-0 text-muted-foreground"
                       aria-hidden="true"
                     />
                     <div className="min-w-0">
@@ -334,7 +311,7 @@ function InterfacePreview({ product }: ProductProps) {
               </div>
               <div className="mt-auto flex items-center gap-3 rounded-2xl border bg-background/90 p-3.5 shadow-lg shadow-black/5">
                 <Plus
-                  className="size-5 text-[var(--product-accent)]"
+                  className="size-5 text-muted-foreground"
                   aria-hidden="true"
                 />
                 <span className="text-sm text-muted-foreground">
@@ -446,7 +423,7 @@ function FeatureStorySection({
       <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col gap-5">
           <div className="flex items-center gap-3">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background text-[var(--product-accent-ink)] shadow-sm dark:text-[var(--product-accent)]">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background shadow-sm">
               <story.icon aria-hidden="true" className="size-4" />
             </span>
             <span className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
@@ -469,7 +446,7 @@ function FeatureStorySection({
               >
                 <ChevronRight
                   aria-hidden="true"
-                  className="mt-0.5 size-4 shrink-0 text-[var(--product-accent)]"
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
                 />
                 <span>{highlight}</span>
               </li>
@@ -508,8 +485,7 @@ function FeatureMockFrame({
     <div aria-label={ariaLabel} className="relative" role="img">
       <div
         aria-hidden="true"
-        className="absolute inset-x-8 top-8 h-32 rounded-full blur-3xl"
-        style={{ backgroundColor: "var(--product-accent-soft)" }}
+        className="absolute inset-x-8 top-8 h-32 rounded-full bg-muted blur-3xl"
       />
       <div className="relative overflow-hidden rounded-2xl border bg-card/95 shadow-xl shadow-black/5">
         {children}
@@ -541,7 +517,7 @@ function MenuBarMock({ mock }: { mock: FeatureMenuBarMock }) {
         <span className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-background/20 px-2 py-1">
           <span
             aria-hidden="true"
-            className="size-1.5 rounded-full bg-[var(--product-accent)]"
+            className="size-1.5 rounded-full bg-current"
           />
           {mock.menuBarLabel}
         </span>
@@ -626,7 +602,7 @@ function TerminalMock({ mock }: { mock: FeatureTerminalMock }) {
           {mock.lines.map((line, index) => (
             <span className={FEATURE_MOCK_LINE_CLASS[line.tone]} key={index}>
               {line.tone === "command" ? (
-                <span className="mr-2 text-[var(--product-accent)]">❯</span>
+                <span className="mr-2 text-zinc-500">❯</span>
               ) : null}
               {line.text}
             </span>
@@ -788,11 +764,7 @@ function MultiPlatformCard({ product }: ProductProps) {
           <CardContent>
             {platform.url ? (
               <a
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  PRIMARY_CTA_CLASS,
-                  "w-full"
-                )}
+                className={cn(buttonVariants({ size: "lg" }), "w-full")}
                 href={platform.url}
               >
                 <Download data-icon="inline-start" />
@@ -843,7 +815,7 @@ function ReleaseCard({ product, release }: ReleaseProps) {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-3 sm:flex-row">
             <a
-              className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
+              className={buttonVariants({ size: "lg" })}
               href={distribution.primaryUrl}
             >
               <Download data-icon="inline-start" />
@@ -911,7 +883,7 @@ function PreviewCard({ product }: ProductProps) {
       </CardHeader>
       <CardContent className="flex flex-col gap-3 sm:flex-row">
         <a
-          className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
+          className={buttonVariants({ size: "lg" })}
           href={distribution.primaryActionUrl}
         >
           {distribution.primaryActionLabel}
@@ -928,13 +900,43 @@ function PreviewCard({ product }: ProductProps) {
   )
 }
 
+/**
+ * Renders the byline with the author's name linked to their X profile. The name
+ * is matched against the handle already carried by `xUrl` rather than stored as
+ * its own field, so the two can never drift apart. A byline that does not name
+ * the handle — or a product with no `xUrl` — degrades to plain text.
+ */
+function FooterByline({ product }: ProductProps) {
+  const handle = product.xUrl?.split("/").pop()
+  const segments = handle ? product.footerNote.split(handle) : []
+
+  if (!handle || segments.length < 2) {
+    return <span>{product.footerNote}</span>
+  }
+
+  const [before, ...rest] = segments
+
+  return (
+    <span>
+      {before}
+      <a
+        className="underline-offset-4 hover:text-foreground hover:underline"
+        href={product.xUrl}
+      >
+        {handle}
+      </a>
+      {rest.join(handle)}
+    </span>
+  )
+}
+
 function SiteFooter({ product }: ProductProps) {
   return (
     <footer className="border-t py-8">
       <div className="mx-auto flex max-w-6xl flex-col gap-5 px-5 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           <ProductMark product={product} compact />
-          <span>{product.footerNote}</span>
+          <FooterByline product={product} />
         </div>
         <div className="flex items-center gap-4">
           <a
@@ -968,7 +970,7 @@ function HeroActions({ product }: ProductProps) {
     return (
       <>
         <a
-          className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
+          className={buttonVariants({ size: "lg" })}
           href={distribution.primaryUrl}
         >
           <Download data-icon="inline-start" />
@@ -988,7 +990,7 @@ function HeroActions({ product }: ProductProps) {
   return (
     <>
       <a
-        className={cn(buttonVariants({ size: "lg" }), PRIMARY_CTA_CLASS)}
+        className={buttonVariants({ size: "lg" })}
         href={distribution.primaryUrl}
       >
         {product.primaryCta}
@@ -1027,7 +1029,7 @@ function ProductMark({
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex shrink-0 items-center justify-center bg-[var(--product-accent)] text-white shadow-sm",
+        "inline-flex shrink-0 items-center justify-center bg-foreground text-background shadow-sm",
         compact ? "size-7 rounded-md" : "size-8 rounded-lg"
       )}
     >
