@@ -109,8 +109,6 @@ export type LandingProduct = {
   distribution: LandingDistribution
   /** X (Twitter) profile URL, linked in the footer when set. */
   xUrl?: string
-  accent: string
-  accentSoft: string
   title: string
   description: string
   metaDescription: string

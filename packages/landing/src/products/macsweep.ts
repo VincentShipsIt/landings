@@ -24,8 +24,6 @@ export const macSweepLanding: LandingProduct = {
     ],
   },
   xUrl: "https://x.com/VincentShipsIt",
-  accent: "oklch(0.68 0.16 210)",
-  accentSoft: "oklch(0.94 0.05 210)",
   title: "Clean your Mac. Keep control.",
   description:
     "Open-source macOS cleanup, inspection, and maintenance tools with safety-first defaults.",
