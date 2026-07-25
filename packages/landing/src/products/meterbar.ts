@@ -24,8 +24,6 @@ export const meterBarLanding: LandingProduct = {
     ],
   },
   xUrl: "https://x.com/VincentShipsIt",
-  accent: "oklch(0.67 0.18 150)",
-  accentSoft: "oklch(0.94 0.05 150)",
   title: "Know your limits before you hit them.",
   description:
     "Open-source macOS menu bar telemetry for Claude Code, Codex CLI, and Cursor usage limits.",
