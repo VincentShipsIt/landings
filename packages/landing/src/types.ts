@@ -105,6 +105,8 @@ type InterfacePreviewVisual = {
 /** Tone applied to a usage meter, driven by how much quota is left. */
 export type MenuBarWindowState = "critical" | "healthy" | "tight"
 
+type MenuBarStat = { label: string; value: string }
+
 type MenuBarPreviewVisual = {
   kind: "menubar-preview"
   /** Real logo, still used for the header and footer product mark. */
@@ -127,7 +129,12 @@ type MenuBarPreviewVisual = {
     resetLabel: string
     note?: string
   }>
-  stats: Array<{ label: string; value: string }>
+  /**
+   * Exactly three, pinned to the footer's fixed three-column grid. Any other
+   * count would wrap into an orphaned cell, which the grid's hairline gaps
+   * render as stray borders rather than an obvious layout mistake.
+   */
+  stats: [MenuBarStat, MenuBarStat, MenuBarStat]
   /** Real screenshots, still rendered in the gallery below the fold. */
   gallery: LandingImage[]
 }

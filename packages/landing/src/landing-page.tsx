@@ -366,15 +366,13 @@ function MenuBarPreview({ product }: ProductProps) {
         style={{ backgroundColor: "var(--product-accent-soft)" }}
       />
       <div className="relative overflow-hidden rounded-2xl border bg-card shadow-2xl shadow-black/10">
+        {/*
+          Order matches macOS: third-party status items sit left of the system
+          icons, which sit left of the clock. The app's own item is highlighted
+          because its menu is open below.
+        */}
         <div className="flex h-9 items-center gap-3 border-b bg-muted/50 px-4 text-xs">
-          <span
-            aria-hidden="true"
-            className="ml-auto flex items-center gap-2.5 text-muted-foreground/50"
-          >
-            <Wifi className="size-3.5" />
-            <BatteryFull className="size-3.5" />
-          </span>
-          <span className="flex items-center gap-1.5 rounded-md bg-background px-2 py-1 font-medium shadow-sm ring-1 ring-border">
+          <span className="ml-auto flex items-center gap-1.5 rounded-md bg-background px-2 py-1 font-medium shadow-sm ring-1 ring-border">
             <Image
               alt=""
               className="size-4 rounded-sm"
@@ -383,6 +381,13 @@ function MenuBarPreview({ product }: ProductProps) {
               width={32}
             />
             {visual.menuBarStatus}
+          </span>
+          <span
+            aria-hidden="true"
+            className="flex items-center gap-2.5 text-muted-foreground/50"
+          >
+            <Wifi className="size-3.5" />
+            <BatteryFull className="size-3.5" />
           </span>
           <span className="text-muted-foreground">{visual.menuBarClock}</span>
         </div>
