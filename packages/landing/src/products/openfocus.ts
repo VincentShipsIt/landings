@@ -43,8 +43,6 @@ export const openFocusLanding: LandingProduct = {
     ],
   },
   xUrl: "https://x.com/VincentShipsIt",
-  accent: "oklch(0.67 0.17 282)",
-  accentSoft: "oklch(0.93 0.07 282)",
   title: "Your day, already in focus.",
   description: "A fast, native, AI-native task manager for Mac and iPhone.",
   metaDescription:

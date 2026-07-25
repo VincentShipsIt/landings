@@ -12,5 +12,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `apps/opentvtrackerdev`, and `apps/openfocusdev`.
 - Shared page code lives in `packages/landing`; shared shadcn/ui components live in `packages/ui`.
 - Keep landing pages visually consistent by changing product content in
-  `packages/landing/src/products.ts`.
+  `packages/landing/src/products/`: one file per product (`meterbar.ts`,
+  `macsweep.ts`, `openfocus.ts`, `opentv.ts`), plus `shared.ts` for copy shared
+  across products and `index.ts` as the barrel.
 - Run shadcn from one app directory, for example `cd apps/meterbardev && bunx --bun shadcn@latest add card`.
