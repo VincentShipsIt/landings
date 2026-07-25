@@ -15,6 +15,7 @@ import {
   BatteryFull,
   Bot,
   CalendarClock,
+  Check,
   ChevronRight,
   Circle,
   Clock,
@@ -24,8 +25,10 @@ import {
   Laptop,
   Plus,
   RefreshCw,
+  ShieldCheck,
   Sparkles,
   Smartphone,
+  Star,
   Terminal,
   Wifi,
 } from "lucide-react"
@@ -33,8 +36,13 @@ import Image from "next/image"
 
 import { CopyCommandButton } from "./copy-command-button"
 import { CopyPromptButton } from "./copy-prompt-button"
-import { getLatestRelease, type LatestRelease } from "./download"
-import { formatFileSize } from "./format"
+import {
+  getLatestRelease,
+  getSocialProof,
+  type LatestRelease,
+  type SocialProof,
+} from "./download"
+import { formatCount, formatFileSize } from "./format"
 import type { LandingImage, LandingProduct, MenuBarWindowState } from "./types"
 
 type ProductProps = {
@@ -46,15 +54,27 @@ type ReleaseProps = ProductProps & {
   release: LatestRelease | null
 }
 
+type HeroProps = ReleaseProps & {
+  /**
+   * GitHub stars and downloads, or null when the product is not distributed
+   * through releases, the lookup failed, or nothing cleared its floor.
+   */
+  socialProof: SocialProof | null
+}
+
 export async function LandingPage({ product }: ProductProps) {
-  const release = await getLatestRelease(product)
+  const [release, socialProof] = await Promise.all([
+    getLatestRelease(product),
+    getSocialProof(product),
+  ])
 
   return (
     <main className="min-h-svh bg-background text-foreground">
       <SiteHeader product={product} />
-      <Hero product={product} release={release} />
+      <Hero product={product} release={release} socialProof={socialProof} />
       <ProviderSection product={product} />
       <FeatureSection product={product} />
+      <PrivacySection product={product} />
       <ProductGallery product={product} />
       <AvailabilitySection product={product} release={release} />
       <SiteFooter product={product} />
@@ -90,6 +110,14 @@ function SiteHeader({ product }: ProductProps) {
           >
             Features
           </a>
+          {product.privacy ? (
+            <a
+              className="transition-colors hover:text-foreground"
+              href="#privacy"
+            >
+              {product.privacy.label}
+            </a>
+          ) : null}
           <a
             className="transition-colors hover:text-foreground"
             href="#availability"
@@ -118,7 +146,7 @@ function SiteHeader({ product }: ProductProps) {
   )
 }
 
-function Hero({ product, release }: ReleaseProps) {
+function Hero({ product, release, socialProof }: HeroProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
@@ -127,6 +155,7 @@ function Hero({ product, release }: ReleaseProps) {
             {release ? (
               <Badge variant="outline">Latest {release.version}</Badge>
             ) : null}
+            <SocialProofBadges socialProof={socialProof} />
             {product.proof.map((item) => (
               <Badge key={item} variant="secondary">
                 {item}
@@ -152,6 +181,36 @@ function Hero({ product, release }: ReleaseProps) {
         <ProductVisual product={product} />
       </div>
     </section>
+  )
+}
+
+/**
+ * Measured proof sitting beside the static claims: the numbers are what the
+ * competing pages in this niche never show. Everything here is best-effort —
+ * an unavailable, rate-limited, or unconvincingly small count arrives as null
+ * and renders nothing at all, never a zero, a skeleton, or an error.
+ */
+function SocialProofBadges({ socialProof }: Pick<HeroProps, "socialProof">) {
+  if (!socialProof) return null
+
+  const downloads = formatCount(socialProof.downloads)
+  const stars = formatCount(socialProof.stars)
+
+  return (
+    <>
+      {stars ? (
+        <Badge variant="secondary">
+          <Star aria-hidden="true" data-icon="inline-start" />
+          {stars} GitHub stars
+        </Badge>
+      ) : null}
+      {downloads ? (
+        <Badge variant="secondary">
+          <Download aria-hidden="true" data-icon="inline-start" />
+          {downloads} downloads
+        </Badge>
+      ) : null}
+    </>
   )
 }
 
@@ -498,6 +557,93 @@ function FeatureSection({ product }: ProductProps) {
               </CardHeader>
             </Card>
           ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * The trust section, rendered directly after the features so the "it reads my
+ * provider auth" objection is answered where the feature grid raises it.
+ */
+function PrivacySection({ product }: ProductProps) {
+  const { privacy } = product
+
+  if (!privacy) return null
+
+  return (
+    <section id="privacy" className="border-t py-20">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
+        <div className="max-w-3xl">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            {privacy.label}
+          </div>
+          <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
+            {privacy.heading}
+          </h2>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
+            {privacy.description}
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {privacy.reads.map((read) => (
+            <Card className="rounded-lg *:rounded-lg" key={read.title}>
+              <CardHeader>
+                <CardTitle>{read.title}</CardTitle>
+                <CardDescription>{read.detail}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <code className="block overflow-x-auto rounded-md border bg-muted/50 px-2.5 py-2 font-mono text-xs whitespace-nowrap text-muted-foreground">
+                  {read.source}
+                </code>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex flex-col gap-5">
+            <h3 className="font-heading text-xl font-semibold tracking-[-0.02em]">
+              {privacy.permissionsHeading}
+            </h3>
+            <dl className="flex flex-col divide-y border-y">
+              {privacy.permissions.map((permission) => (
+                <div className="py-4" key={permission.title}>
+                  <dt className="text-sm font-medium">{permission.title}</dt>
+                  <dd className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                    {permission.detail}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          <div className="flex flex-col gap-5">
+            <h3 className="font-heading text-xl font-semibold tracking-[-0.02em]">
+              {privacy.guaranteesHeading}
+            </h3>
+            <ul className="flex flex-col gap-3">
+              {privacy.guarantees.map((guarantee) => (
+                <li
+                  className="flex gap-3 text-sm leading-6 text-muted-foreground"
+                  key={guarantee}
+                >
+                  <Check
+                    className="mt-1 size-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <span>{guarantee}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
+              href={privacy.sourceLink.href}
+            >
+              {privacy.sourceLink.label}
+              <ArrowUpRight data-icon="inline-end" />
+            </a>
+          </div>
         </div>
       </div>
     </section>

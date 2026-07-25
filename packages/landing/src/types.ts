@@ -139,6 +139,42 @@ type MenuBarPreviewVisual = {
   gallery: LandingImage[]
 }
 
+/**
+ * Trust section for products whose core job is reading local credential or
+ * provider state, where a generic "nothing is uploaded" line is the weakest
+ * possible answer. Optional: products that omit it render exactly as before.
+ *
+ * Every string here is a factual claim about the shipped app, so it must be
+ * checkable against that app's own source before it goes in.
+ */
+export type LandingPrivacy = {
+  description: string
+  /** Short, verifiable claims that need no per-item source path. */
+  guarantees: string[]
+  guaranteesHeading: string
+  heading: string
+  /** Eyebrow above the heading, e.g. "Privacy". */
+  label: string
+  /** macOS prompts the user should expect, each with the reason it appears. */
+  permissions: Array<{
+    detail: string
+    title: string
+  }>
+  permissionsHeading: string
+  /** One entry per local source the app reads, and what it takes from it. */
+  reads: Array<{
+    detail: string
+    /** Literal path or store, rendered as code. */
+    source: string
+    title: string
+  }>
+  /** Where a reader can check all of the above against the source. */
+  sourceLink: {
+    href: string
+    label: string
+  }
+}
+
 export type LandingProduct = {
   name: string
   domain: string
@@ -179,5 +215,7 @@ export type LandingProduct = {
     description: string
     icon: LucideIcon
   }>
+  /** Rendered between the features and the gallery when set. */
+  privacy?: LandingPrivacy
   footerNote: string
 }
