@@ -12,25 +12,38 @@ import { ThemeToggle } from "@workspace/ui/components/theme-toggle"
 import { cn } from "@workspace/ui/lib/utils"
 import {
   ArrowUpRight,
+  BatteryFull,
   Bot,
   CalendarClock,
+  Check,
   ChevronRight,
   Circle,
+  Clock,
   Download,
   GitFork,
   Images,
   Laptop,
   Plus,
+  RefreshCw,
+  ShieldCheck,
   Sparkles,
   Smartphone,
+  Star,
   Terminal,
+  Wifi,
 } from "lucide-react"
 import Image from "next/image"
 import type { ReactNode } from "react"
 
+import { CopyCommandButton } from "./copy-command-button"
 import { CopyPromptButton } from "./copy-prompt-button"
-import { getLatestRelease, type LatestRelease } from "./download"
-import { formatFileSize } from "./format"
+import {
+  getLatestRelease,
+  getSocialProof,
+  type LatestRelease,
+  type SocialProof,
+} from "./download"
+import { formatCount, formatFileSize } from "./format"
 import type {
   FeatureMenuBarMock,
   FeatureMock,
@@ -40,6 +53,7 @@ import type {
   LandingFeatureStory,
   LandingImage,
   LandingProduct,
+  MenuBarWindowState,
 } from "./types"
 
 /**
@@ -97,14 +111,27 @@ type ReleaseProps = ProductProps & {
   release: LatestRelease | null
 }
 
+type HeroProps = ReleaseProps & {
+  /**
+   * GitHub stars and downloads, or null when the product is not distributed
+   * through releases, the lookup failed, or nothing cleared its floor.
+   */
+  socialProof: SocialProof | null
+}
+
 export async function LandingPage({ product }: ProductProps) {
-  const release = await getLatestRelease(product)
+  const [release, socialProof] = await Promise.all([
+    getLatestRelease(product),
+    getSocialProof(product),
+  ])
 
   return (
     <main className="min-h-svh bg-background text-foreground">
       <SiteHeader product={product} />
-      <Hero product={product} release={release} />
+      <Hero product={product} release={release} socialProof={socialProof} />
+      <ProviderSection product={product} />
       <FeatureSection product={product} />
+      <PrivacySection product={product} />
       <ProductGallery product={product} />
       <AvailabilitySection product={product} release={release} />
       <SiteFooter product={product} />
@@ -126,12 +153,28 @@ function SiteHeader({ product }: ProductProps) {
           aria-label="Main navigation"
           className="hidden items-center gap-6 text-sm text-muted-foreground md:flex"
         >
+          {product.providers ? (
+            <a
+              className="transition-colors hover:text-foreground"
+              href="#providers"
+            >
+              Coverage
+            </a>
+          ) : null}
           <a
             className="transition-colors hover:text-foreground"
             href="#features"
           >
             Features
           </a>
+          {product.privacy ? (
+            <a
+              className="transition-colors hover:text-foreground"
+              href="#privacy"
+            >
+              {product.privacy.label}
+            </a>
+          ) : null}
           <a
             className="transition-colors hover:text-foreground"
             href="#availability"
@@ -160,7 +203,7 @@ function SiteHeader({ product }: ProductProps) {
   )
 }
 
-function Hero({ product, release }: ReleaseProps) {
+function Hero({ product, release, socialProof }: HeroProps) {
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-6xl items-center gap-10 px-5 py-16 lg:grid-cols-[0.92fr_1.08fr] lg:py-20">
@@ -169,6 +212,7 @@ function Hero({ product, release }: ReleaseProps) {
             {release ? (
               <Badge variant="outline">Latest {release.version}</Badge>
             ) : null}
+            <SocialProofBadges socialProof={socialProof} />
             {product.proof.map((item) => (
               <Badge key={item} variant="secondary">
                 {item}
@@ -187,12 +231,43 @@ function Hero({ product, release }: ReleaseProps) {
             <div className="flex flex-col gap-3 sm:flex-row">
               <HeroActions product={product} />
             </div>
+            <HeroInstallCommand product={product} />
             <DownloadMeta product={product} release={release} />
           </div>
         </div>
         <ProductVisual product={product} />
       </div>
     </section>
+  )
+}
+
+/**
+ * Measured proof sitting beside the static claims: the numbers are what the
+ * competing pages in this niche never show. Everything here is best-effort —
+ * an unavailable, rate-limited, or unconvincingly small count arrives as null
+ * and renders nothing at all, never a zero, a skeleton, or an error.
+ */
+function SocialProofBadges({ socialProof }: Pick<HeroProps, "socialProof">) {
+  if (!socialProof) return null
+
+  const downloads = formatCount(socialProof.downloads)
+  const stars = formatCount(socialProof.stars)
+
+  return (
+    <>
+      {stars ? (
+        <Badge variant="secondary">
+          <Star aria-hidden="true" data-icon="inline-start" />
+          {stars} GitHub stars
+        </Badge>
+      ) : null}
+      {downloads ? (
+        <Badge variant="secondary">
+          <Download aria-hidden="true" data-icon="inline-start" />
+          {downloads} downloads
+        </Badge>
+      ) : null}
+    </>
   )
 }
 
@@ -212,9 +287,31 @@ function DownloadMeta({ product, release }: ReleaseProps) {
   return <p className="text-sm text-muted-foreground">{parts.join(" · ")}</p>
 }
 
+/**
+ * Package-manager users can install without ever reaching the availability
+ * section, so the one-liner is repeated above the fold.
+ */
+function HeroInstallCommand({ product }: ProductProps) {
+  if (product.distribution.kind !== "github-release") return null
+
+  return <CopyCommandButton command={product.distribution.installCommand} />
+}
+
+/**
+ * Screenshot galleries are optional per visual kind, so the union is narrowed
+ * in one place rather than at each call site.
+ */
+function getVisualGallery(visual: LandingProduct["visual"]): LandingImage[] {
+  return visual.kind === "interface-preview" ? [] : visual.gallery
+}
+
 function ProductVisual({ product }: ProductProps) {
   if (product.visual.kind === "interface-preview") {
     return <InterfacePreview product={product} />
+  }
+
+  if (product.visual.kind === "menubar-preview") {
+    return <MenuBarPreview product={product} />
   }
 
   const { primary } = product.visual
@@ -329,6 +426,164 @@ function InterfacePreview({ product }: ProductProps) {
         {visual.caption}
       </p>
     </div>
+  )
+}
+
+const METER_FILL: Record<MenuBarWindowState, string> = {
+  critical: "bg-red-500",
+  healthy: "bg-foreground",
+  tight: "bg-amber-500",
+}
+
+const METER_TEXT: Record<MenuBarWindowState, string> = {
+  critical: "text-red-600 dark:text-red-400",
+  healthy: "text-foreground",
+  tight: "text-amber-600 dark:text-amber-400",
+}
+
+/**
+ * Coded mock of the menu bar dropdown. A screenshot of a menu bar app is mostly
+ * empty desktop, so the interface is rebuilt at hero scale instead.
+ */
+function MenuBarPreview({ product }: ProductProps) {
+  const visual = product.visual
+
+  if (visual.kind !== "menubar-preview") return null
+
+  return (
+    <div aria-label={visual.ariaLabel} className="relative" role="img">
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-8 top-10 h-52 rounded-full bg-muted blur-3xl"
+      />
+      <div className="relative overflow-hidden rounded-2xl border bg-card shadow-2xl shadow-black/10">
+        {/*
+          Order matches macOS: third-party status items sit left of the system
+          icons, which sit left of the clock. The app's own item is highlighted
+          because its menu is open below.
+        */}
+        <div className="flex h-9 items-center gap-3 border-b bg-muted/50 px-4 text-xs">
+          <span className="ml-auto flex items-center gap-1.5 rounded-md bg-background px-2 py-1 font-medium shadow-sm ring-1 ring-border">
+            <Image
+              alt=""
+              className="size-4 rounded-sm"
+              height={32}
+              src={visual.logo.src}
+              width={32}
+            />
+            {visual.menuBarStatus}
+          </span>
+          <span
+            aria-hidden="true"
+            className="flex items-center gap-2.5 text-muted-foreground/50"
+          >
+            <Wifi className="size-3.5" />
+            <BatteryFull className="size-3.5" />
+          </span>
+          <span className="text-muted-foreground">{visual.menuBarClock}</span>
+        </div>
+        <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-semibold">
+                {visual.accountName}
+              </p>
+              <Badge variant="secondary">{visual.accountPlan}</Badge>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {visual.updatedLabel}
+            </p>
+          </div>
+          <RefreshCw
+            aria-hidden="true"
+            className="size-4 shrink-0 text-muted-foreground"
+          />
+        </div>
+        <div className="divide-y">
+          {visual.windows.map((meter) => (
+            <div className="px-5 py-4" key={meter.label}>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-sm text-muted-foreground">{meter.label}</p>
+                <p
+                  className={cn(
+                    "text-sm font-semibold tabular-nums",
+                    METER_TEXT[meter.state]
+                  )}
+                >
+                  {meter.remaining}% left
+                </p>
+              </div>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn("h-full rounded-full", METER_FILL[meter.state])}
+                  style={{ width: `${meter.remaining}%` }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Clock aria-hidden="true" className="size-3.5" />
+                  {meter.resetLabel}
+                </span>
+                {meter.note ? <span>{meter.note}</span> : null}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-3 gap-px border-t bg-border">
+          {visual.stats.map((stat) => (
+            <div className="bg-card px-5 py-4" key={stat.label}>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="mt-1 text-sm font-semibold tabular-nums">
+                {stat.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="mt-3 text-center text-xs text-muted-foreground">
+        {visual.caption}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Coverage strip. "Does it support my tool?" is the first question about an
+ * integration utility, so it answers above the feature grid.
+ *
+ * Deliberately scaled below the other sections: tighter padding and a smaller
+ * heading. It shares the hero's untinted background, so reading as a strip
+ * attached to the hero — rather than as a peer of the tinted feature band —
+ * keeps the page's plain/tinted alternation legible.
+ */
+function ProviderSection({ product }: ProductProps) {
+  const providers = product.providers
+
+  if (!providers) return null
+
+  return (
+    <section id="providers" className="border-t py-14">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5">
+        <div className="max-w-2xl">
+          <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em]">
+            {providers.heading}
+          </h2>
+          <p className="mt-3 text-base leading-7 text-muted-foreground">
+            {providers.description}
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {providers.items.map((item) => (
+            <div className="rounded-lg border px-4 py-3.5" key={item.name}>
+              <p className="text-sm font-medium">{item.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {item.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -643,10 +898,95 @@ function TilesMock({ mock }: { mock: FeatureTilesMock }) {
   )
 }
 
-function ProductGallery({ product }: ProductProps) {
-  if (product.visual.kind !== "screenshots") return null
+/**
+ * The trust section, rendered directly after the features so the "it reads my
+ * provider auth" objection is answered where the feature grid raises it.
+ */
+function PrivacySection({ product }: ProductProps) {
+  const { privacy } = product
 
-  const images: LandingImage[] = product.visual.gallery
+  if (!privacy) return null
+
+  return (
+    <section id="privacy" className="border-t py-20">
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
+        <div className="max-w-3xl">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <ShieldCheck className="size-4" aria-hidden="true" />
+            {privacy.label}
+          </div>
+          <h2 className="mt-3 font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
+            {privacy.heading}
+          </h2>
+          <p className="mt-4 text-base leading-7 text-muted-foreground">
+            {privacy.description}
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {privacy.reads.map((read) => (
+            <Card className="rounded-lg *:rounded-lg" key={read.title}>
+              <CardHeader>
+                <CardTitle>{read.title}</CardTitle>
+                <CardDescription>{read.detail}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <code className="block overflow-x-auto rounded-md border bg-muted/50 px-2.5 py-2 font-mono text-xs whitespace-nowrap text-muted-foreground">
+                  {read.source}
+                </code>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex flex-col gap-5">
+            <h3 className="font-heading text-xl font-semibold tracking-[-0.02em]">
+              {privacy.permissionsHeading}
+            </h3>
+            <dl className="flex flex-col divide-y border-y">
+              {privacy.permissions.map((permission) => (
+                <div className="py-4" key={permission.title}>
+                  <dt className="text-sm font-medium">{permission.title}</dt>
+                  <dd className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                    {permission.detail}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          <div className="flex flex-col gap-5">
+            <h3 className="font-heading text-xl font-semibold tracking-[-0.02em]">
+              {privacy.guaranteesHeading}
+            </h3>
+            <ul className="flex flex-col gap-3">
+              {privacy.guarantees.map((guarantee) => (
+                <li
+                  className="flex gap-3 text-sm leading-6 text-muted-foreground"
+                  key={guarantee}
+                >
+                  <Check
+                    className="mt-1 size-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <span>{guarantee}</span>
+                </li>
+              ))}
+            </ul>
+            <a
+              className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
+              href={privacy.sourceLink.href}
+            >
+              {privacy.sourceLink.label}
+              <ArrowUpRight data-icon="inline-end" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ProductGallery({ product }: ProductProps) {
+  const images = getVisualGallery(product.visual)
 
   if (!images.length) return null
 
@@ -1011,36 +1351,40 @@ function ProductMark({
   compact = false,
   product,
 }: ProductProps & { compact?: boolean }) {
-  if (product.visual.kind === "screenshots") {
+  const visual = product.visual
+
+  // Only the fully synthetic preview lacks a real logo; it falls back to a
+  // generated letter mark.
+  if (visual.kind === "interface-preview") {
     return (
-      <Image
-        alt=""
-        className={cn(compact ? "size-7 rounded-md" : "size-8 rounded-lg")}
-        // Intrinsic size is pinned at 2x the largest rendered box rather than
-        // the source dimensions, so the optimizer never ships a 512px logo.
-        height={64}
-        src={product.visual.logo.src}
-        width={64}
-      />
+      <span
+        aria-hidden="true"
+        className={cn(
+          "inline-flex shrink-0 items-center justify-center bg-foreground text-background shadow-sm",
+          compact ? "size-7 rounded-md" : "size-8 rounded-lg"
+        )}
+      >
+        <span
+          className={cn(
+            "font-heading leading-none font-semibold",
+            compact ? "text-sm" : "text-base"
+          )}
+        >
+          {visual.markLabel}
+        </span>
+      </span>
     )
   }
 
   return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center bg-foreground text-background shadow-sm",
-        compact ? "size-7 rounded-md" : "size-8 rounded-lg"
-      )}
-    >
-      <span
-        className={cn(
-          "font-heading leading-none font-semibold",
-          compact ? "text-sm" : "text-base"
-        )}
-      >
-        {product.visual.markLabel}
-      </span>
-    </span>
+    <Image
+      alt=""
+      className={cn(compact ? "size-7 rounded-md" : "size-8 rounded-lg")}
+      // Intrinsic size is pinned at 2x the largest rendered box rather than
+      // the source dimensions, so the optimizer never ships a 512px logo.
+      height={64}
+      src={visual.logo.src}
+      width={64}
+    />
   )
 }

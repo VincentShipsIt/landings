@@ -16,5 +16,6 @@ export type {
   LandingDistribution,
   LandingFeatureStory,
   LandingImage,
+  LandingPrivacy,
   LandingProduct,
 } from "./types"

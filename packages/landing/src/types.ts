@@ -203,6 +203,79 @@ export type LandingFeatureStory = {
   title: string
 }
 
+/** Tone applied to a usage meter, driven by how much quota is left. */
+export type MenuBarWindowState = "critical" | "healthy" | "tight"
+
+type MenuBarStat = { label: string; value: string }
+
+type MenuBarPreviewVisual = {
+  kind: "menubar-preview"
+  /** Real logo, still used for the header and footer product mark. */
+  logo: LandingImage
+  /** Describes the mock to assistive technology; it is not a screenshot. */
+  ariaLabel: string
+  caption: string
+  /** Text shown in the faux macOS menu bar's clock slot. */
+  menuBarClock: string
+  /** Compact status the app itself paints into the menu bar, e.g. "17%". */
+  menuBarStatus: string
+  accountName: string
+  accountPlan: string
+  updatedLabel: string
+  windows: Array<{
+    label: string
+    /** Percentage of quota remaining, 0-100. Drives bar width and tone. */
+    remaining: number
+    state: MenuBarWindowState
+    resetLabel: string
+    note?: string
+  }>
+  /**
+   * Exactly three, pinned to the footer's fixed three-column grid. Any other
+   * count would wrap into an orphaned cell, which the grid's hairline gaps
+   * render as stray borders rather than an obvious layout mistake.
+   */
+  stats: [MenuBarStat, MenuBarStat, MenuBarStat]
+  /** Real screenshots, still rendered in the gallery below the fold. */
+  gallery: LandingImage[]
+}
+
+/**
+ * Trust section for products whose core job is reading local credential or
+ * provider state, where a generic "nothing is uploaded" line is the weakest
+ * possible answer. Optional: products that omit it render exactly as before.
+ *
+ * Every string here is a factual claim about the shipped app, so it must be
+ * checkable against that app's own source before it goes in.
+ */
+export type LandingPrivacy = {
+  description: string
+  /** Short, verifiable claims that need no per-item source path. */
+  guarantees: string[]
+  guaranteesHeading: string
+  heading: string
+  /** Eyebrow above the heading, e.g. "Privacy". */
+  label: string
+  /** macOS prompts the user should expect, each with the reason it appears. */
+  permissions: Array<{
+    detail: string
+    title: string
+  }>
+  permissionsHeading: string
+  /** One entry per local source the app reads, and what it takes from it. */
+  reads: Array<{
+    detail: string
+    /** Literal path or store, rendered as code. */
+    source: string
+    title: string
+  }>
+  /** Where a reader can check all of the above against the source. */
+  sourceLink: {
+    href: string
+    label: string
+  }
+}
+
 export type LandingProduct = {
   name: string
   domain: string
@@ -219,7 +292,16 @@ export type LandingProduct = {
   /** Shown next to the primary CTA so the OS floor is visible above the fold. */
   platformRequirement: string
   ogImage: LandingImage
-  visual: ScreenshotVisual | InterfacePreviewVisual
+  visual: ScreenshotVisual | InterfacePreviewVisual | MenuBarPreviewVisual
+  /**
+   * Coverage strip listing the tools the app reads. Omitted for products that
+   * do not integrate with anything.
+   */
+  providers?: {
+    heading: string
+    description: string
+    items: Array<{ name: string; detail: string }>
+  }
   sections: {
     featureHeading: string
     featureDescription: string
@@ -240,5 +322,7 @@ export type LandingProduct = {
    * left unused. Products that omit it keep the icon-card grid.
    */
   featureStories?: LandingFeatureStory[]
+  /** Rendered between the features and the gallery when set. */
+  privacy?: LandingPrivacy
   footerNote: string
 }
