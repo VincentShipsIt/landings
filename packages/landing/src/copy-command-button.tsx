@@ -30,7 +30,13 @@ export function CopyCommandButton({ command }: CopyCommandButtonProps) {
 
   return (
     <button
-      aria-label={`Copy install command: ${command}`}
+      // The state swap is carried by an aria-hidden icon, so the accessible
+      // name has to report it instead — otherwise the copy is silent to AT.
+      aria-label={
+        copied
+          ? `Copied install command: ${command}`
+          : `Copy install command: ${command}`
+      }
       className="group flex min-w-0 items-center gap-2.5 rounded-lg border bg-muted/40 px-3.5 py-2.5 text-left transition-colors hover:bg-muted sm:max-w-md"
       onClick={copy}
       type="button"

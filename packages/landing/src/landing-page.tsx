@@ -454,6 +454,11 @@ function MenuBarPreview({ product }: ProductProps) {
 /**
  * Coverage strip. "Does it support my tool?" is the first question about an
  * integration utility, so it answers above the feature grid.
+ *
+ * Deliberately scaled below the other sections: tighter padding and a smaller
+ * heading. It shares the hero's untinted background, so reading as a strip
+ * attached to the hero — rather than as a peer of the tinted feature band —
+ * keeps the page's plain/tinted alternation legible.
  */
 function ProviderSection({ product }: ProductProps) {
   const providers = product.providers
@@ -461,13 +466,13 @@ function ProviderSection({ product }: ProductProps) {
   if (!providers) return null
 
   return (
-    <section id="providers" className="border-t py-20">
-      <div className="mx-auto flex max-w-6xl flex-col gap-8 px-5">
+    <section id="providers" className="border-t py-14">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5">
         <div className="max-w-2xl">
-          <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
+          <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em]">
             {providers.heading}
           </h2>
-          <p className="mt-4 text-base leading-7 text-muted-foreground">
+          <p className="mt-3 text-base leading-7 text-muted-foreground">
             {providers.description}
           </p>
         </div>
