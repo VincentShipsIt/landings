@@ -26,13 +26,68 @@ import {
   Terminal,
 } from "lucide-react"
 import Image from "next/image"
-import type { CSSProperties } from "react"
+import type { CSSProperties, ReactNode } from "react"
 
 import { CopyPromptButton } from "./copy-prompt-button"
 import { PRIMARY_CTA_CLASS } from "./cta"
 import { getLatestRelease, type LatestRelease } from "./download"
 import { formatFileSize } from "./format"
-import type { LandingImage, LandingProduct } from "./types"
+import type {
+  FeatureMenuBarMock,
+  FeatureMock,
+  FeatureStatusMock,
+  FeatureTerminalMock,
+  FeatureTilesMock,
+  LandingFeatureStory,
+  LandingImage,
+  LandingProduct,
+} from "./types"
+
+/**
+ * Every conditional class below is picked from a record of complete literal
+ * strings. Tailwind only scans static source text, so an interpolated class
+ * name would never reach the generated stylesheet.
+ */
+const FEATURE_STORY_SECTION_CLASS = {
+  banded: "border-t bg-muted/30 py-20",
+  plain: "border-t py-20",
+} as const
+
+/** Which column the mock occupies, so the layout alternates down the page. */
+const FEATURE_STORY_MOCK_CLASS = {
+  left: "lg:order-first",
+  right: "lg:order-last",
+} as const
+
+const FEATURE_MOCK_METER_CLASS = {
+  accent: "h-full rounded-full bg-[var(--product-accent)]",
+  neutral: "h-full rounded-full bg-muted-foreground/40",
+  warning: "h-full rounded-full bg-amber-500",
+} as const
+
+const FEATURE_MOCK_DOT_CLASS = {
+  accent: "size-2 shrink-0 rounded-full bg-[var(--product-accent)]",
+  neutral: "size-2 shrink-0 rounded-full bg-muted-foreground/40",
+  warning: "size-2 shrink-0 rounded-full bg-amber-500",
+} as const
+
+const FEATURE_MOCK_STATUS_CLASS = {
+  accent: "text-[var(--product-accent-ink)] dark:text-[var(--product-accent)]",
+  neutral: "text-muted-foreground",
+  warning: "text-amber-600 dark:text-amber-400",
+} as const
+
+const FEATURE_MOCK_TILE_CLASS = {
+  large: "col-span-2 sm:col-span-4",
+  medium: "col-span-2",
+  small: "col-span-1",
+} as const
+
+const FEATURE_MOCK_LINE_CLASS = {
+  command: "block text-zinc-100",
+  comment: "block text-zinc-500",
+  output: "block text-zinc-400",
+} as const
 
 type ProductProps = {
   product: LandingProduct
@@ -301,17 +356,16 @@ function InterfacePreview({ product }: ProductProps) {
 }
 
 function FeatureSection({ product }: ProductProps) {
+  const stories = product.featureStories
+
+  if (stories?.length) {
+    return <FeatureStorySections product={product} stories={stories} />
+  }
+
   return (
     <section id="features" className="border-t bg-muted/30 py-20">
       <div className="mx-auto flex max-w-6xl flex-col gap-10 px-5">
-        <div className="max-w-2xl">
-          <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
-            {product.sections.featureHeading}
-          </h2>
-          <p className="mt-4 text-base leading-7 text-muted-foreground">
-            {product.sections.featureDescription}
-          </p>
-        </div>
+        <FeatureIntro product={product} />
         <div
           className={cn(
             "grid gap-4 md:grid-cols-2",
@@ -330,6 +384,286 @@ function FeatureSection({ product }: ProductProps) {
         </div>
       </div>
     </section>
+  )
+}
+
+/** Heading pair shared by both feature treatments so the copy cannot drift. */
+function FeatureIntro({ product }: ProductProps) {
+  return (
+    <div className="max-w-2xl">
+      <h2 className="font-heading text-3xl font-semibold tracking-[-0.035em] md:text-4xl">
+        {product.sections.featureHeading}
+      </h2>
+      <p className="mt-4 text-base leading-7 text-muted-foreground">
+        {product.sections.featureDescription}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * The opt-in treatment: the section intro, then one full-width section per
+ * feature. Banding and mock side both alternate, so the page reads as a
+ * sequence of demonstrations rather than a wall of assertions.
+ */
+function FeatureStorySections({
+  product,
+  stories,
+}: ProductProps & { stories: LandingFeatureStory[] }) {
+  return (
+    <>
+      <section className="border-t bg-muted/30 py-20" id="features">
+        <div className="mx-auto max-w-6xl px-5">
+          <FeatureIntro product={product} />
+        </div>
+      </section>
+      {stories.map((story, index) => (
+        <FeatureStorySection
+          banded={index % 2 === 1}
+          key={story.title}
+          story={story}
+        />
+      ))}
+    </>
+  )
+}
+
+function FeatureStorySection({
+  banded,
+  story,
+}: {
+  banded: boolean
+  story: LandingFeatureStory
+}) {
+  return (
+    <section
+      className={
+        banded
+          ? FEATURE_STORY_SECTION_CLASS.banded
+          : FEATURE_STORY_SECTION_CLASS.plain
+      }
+    >
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-5 lg:grid-cols-2 lg:gap-16">
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border bg-background text-[var(--product-accent-ink)] shadow-sm dark:text-[var(--product-accent)]">
+              <story.icon aria-hidden="true" className="size-4" />
+            </span>
+            <span className="text-xs font-medium tracking-[0.16em] text-muted-foreground uppercase">
+              {story.eyebrow}
+            </span>
+          </div>
+          <div className="flex flex-col gap-4">
+            <h3 className="font-heading text-2xl font-semibold tracking-[-0.03em] md:text-3xl">
+              {story.title}
+            </h3>
+            <p className="text-base leading-7 text-muted-foreground">
+              {story.description}
+            </p>
+          </div>
+          <ul className="flex flex-col gap-2.5">
+            {story.highlights.map((highlight) => (
+              <li
+                className="flex gap-3 text-sm text-muted-foreground"
+                key={highlight}
+              >
+                <ChevronRight
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-[var(--product-accent)]"
+                />
+                <span>{highlight}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div
+          className={
+            banded
+              ? FEATURE_STORY_MOCK_CLASS.left
+              : FEATURE_STORY_MOCK_CLASS.right
+          }
+        >
+          <FeatureMockFrame ariaLabel={story.ariaLabel}>
+            <FeatureMockBody mock={story.mock} />
+          </FeatureMockFrame>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Shared chrome for every mock: the soft accent glow behind a bordered card,
+ * labelled as a single image so assistive technology gets the summary instead
+ * of a pile of decorative interface strings.
+ */
+function FeatureMockFrame({
+  ariaLabel,
+  children,
+}: {
+  ariaLabel: string
+  children: ReactNode
+}) {
+  return (
+    <div aria-label={ariaLabel} className="relative" role="img">
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-8 top-8 h-32 rounded-full blur-3xl"
+        style={{ backgroundColor: "var(--product-accent-soft)" }}
+      />
+      <div className="relative overflow-hidden rounded-2xl border bg-card/95 shadow-xl shadow-black/5">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function FeatureMockBody({ mock }: { mock: FeatureMock }) {
+  if (mock.kind === "menu-bar") return <MenuBarMock mock={mock} />
+  if (mock.kind === "status") return <StatusMock mock={mock} />
+  if (mock.kind === "terminal") return <TerminalMock mock={mock} />
+
+  return <TilesMock mock={mock} />
+}
+
+/** Keeps a configured track fill inside its rail whatever the product sets. */
+function clampPercent(percent: number) {
+  return Math.min(100, Math.max(0, percent))
+}
+
+function MenuBarMock({ mock }: { mock: FeatureMenuBarMock }) {
+  return (
+    <>
+      <div className="flex h-10 items-center gap-4 bg-foreground px-4 text-[0.68rem] font-medium text-background">
+        <span className="font-semibold">{mock.appName}</span>
+        <span className="hidden opacity-60 sm:inline">View</span>
+        <span className="hidden opacity-60 sm:inline">Window</span>
+        <span className="ml-auto inline-flex items-center gap-1.5 rounded-md bg-background/20 px-2 py-1">
+          <span
+            aria-hidden="true"
+            className="size-1.5 rounded-full bg-[var(--product-accent)]"
+          />
+          {mock.menuBarLabel}
+        </span>
+      </div>
+      <div className="flex flex-col gap-5 p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm font-semibold">{mock.panelTitle}</p>
+          <span className="rounded-full border px-2.5 py-1 text-[0.68rem] font-medium text-muted-foreground">
+            {mock.panelBadge}
+          </span>
+        </div>
+        <div className="flex flex-col gap-4">
+          {mock.meters.map((meter) => (
+            <div className="flex flex-col gap-2" key={meter.label}>
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="text-sm font-medium">{meter.label}</span>
+                <span className="text-xs text-muted-foreground">
+                  {meter.value}
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={FEATURE_MOCK_METER_CLASS[meter.tone]}
+                  style={{ width: `${clampPercent(meter.percent)}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-muted-foreground">{mock.footnote}</p>
+      </div>
+    </>
+  )
+}
+
+function StatusMock({ mock }: { mock: FeatureStatusMock }) {
+  return (
+    <div className="flex flex-col gap-4 p-5 sm:p-6">
+      <p className="text-sm font-semibold">{mock.title}</p>
+      <div className="divide-y rounded-xl border bg-background/60">
+        {mock.rows.map((row) => (
+          <div className="flex items-center gap-3 px-3.5 py-3" key={row.label}>
+            <span
+              aria-hidden="true"
+              className={FEATURE_MOCK_DOT_CLASS[row.tone]}
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{row.label}</p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                {row.detail}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "ml-auto shrink-0 rounded-full border px-2.5 py-1 text-[0.68rem] font-medium",
+                FEATURE_MOCK_STATUS_CLASS[row.tone]
+              )}
+            >
+              {row.status}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">{mock.footnote}</p>
+    </div>
+  )
+}
+
+function TerminalMock({ mock }: { mock: FeatureTerminalMock }) {
+  return (
+    <div className="bg-zinc-950 dark:bg-zinc-900">
+      <div className="flex h-10 items-center gap-2 border-b border-white/10 px-4">
+        <span className="size-2.5 rounded-full bg-red-400/70" />
+        <span className="size-2.5 rounded-full bg-amber-400/70" />
+        <span className="size-2.5 rounded-full bg-emerald-400/70" />
+        <span className="ml-auto text-[0.68rem] font-medium tracking-wide text-zinc-400 uppercase">
+          {mock.title}
+        </span>
+      </div>
+      <pre className="overflow-x-auto p-5 text-sm leading-7">
+        <code>
+          {mock.lines.map((line, index) => (
+            <span className={FEATURE_MOCK_LINE_CLASS[line.tone]} key={index}>
+              {line.tone === "command" ? (
+                <span className="mr-2 text-[var(--product-accent)]">❯</span>
+              ) : null}
+              {line.text}
+            </span>
+          ))}
+        </code>
+      </pre>
+    </div>
+  )
+}
+
+function TilesMock({ mock }: { mock: FeatureTilesMock }) {
+  return (
+    <div className="flex flex-col gap-4 p-5 sm:p-6">
+      <p className="text-sm font-semibold">{mock.title}</p>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {mock.tiles.map((tile) => (
+          <div
+            className={cn(
+              "flex flex-col gap-1 rounded-xl border bg-background/60 p-3.5",
+              FEATURE_MOCK_TILE_CLASS[tile.size]
+            )}
+            key={tile.label}
+          >
+            <span className="text-[0.62rem] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+              {tile.label}
+            </span>
+            <span className="font-heading text-xl font-semibold tracking-tight">
+              {tile.value}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {tile.caption}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">{mock.footnote}</p>
+    </div>
   )
 }
 

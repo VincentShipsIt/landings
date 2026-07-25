@@ -12,4 +12,9 @@ export {
   openTVTrackerLanding,
 } from "./products"
 export { LandingRootLayout } from "./root-layout"
-export type { LandingDistribution, LandingImage, LandingProduct } from "./types"
+export type {
+  LandingDistribution,
+  LandingFeatureStory,
+  LandingImage,
+  LandingProduct,
+} from "./types"

@@ -102,6 +102,107 @@ type InterfacePreviewVisual = {
   }>
 }
 
+/**
+ * Emphasis applied to a mock row. Each value maps to a complete literal class
+ * string at the render site, because Tailwind only scans static strings.
+ */
+export type FeatureMockTone = "accent" | "neutral" | "warning"
+
+/** One metered row: what is being measured, its readout, and its track fill. */
+export type FeatureMockMeter = {
+  label: string
+  /** Track fill in percent. Clamped to 0–100 when rendered. */
+  percent: number
+  tone: FeatureMockTone
+  /** Right-aligned readout, e.g. "82% used · resets in 4h". */
+  value: string
+}
+
+/** One row of a state list: a subject, its supporting line, and its state. */
+export type FeatureMockStatusRow = {
+  detail: string
+  label: string
+  status: string
+  tone: FeatureMockTone
+}
+
+/** One card in the tile gallery. `size` picks the column span it occupies. */
+export type FeatureMockTile = {
+  caption: string
+  label: string
+  size: "large" | "medium" | "small"
+  value: string
+}
+
+/** One printed line of the terminal mock. `tone` picks its ink. */
+export type FeatureMockLine = {
+  text: string
+  tone: "command" | "comment" | "output"
+}
+
+/** Menu bar extra opened over a panel of live meters. */
+export type FeatureMenuBarMock = {
+  kind: "menu-bar"
+  appName: string
+  footnote: string
+  /** Readout rendered in the simulated menu bar item. */
+  menuBarLabel: string
+  meters: FeatureMockMeter[]
+  panelBadge: string
+  panelTitle: string
+}
+
+/** List of subjects with a state pill each. */
+export type FeatureStatusMock = {
+  kind: "status"
+  footnote: string
+  rows: FeatureMockStatusRow[]
+  title: string
+}
+
+/** Terminal window printing a short, self-contained transcript. */
+export type FeatureTerminalMock = {
+  kind: "terminal"
+  lines: FeatureMockLine[]
+  title: string
+}
+
+/** Gallery of differently sized cards, e.g. a widget family. */
+export type FeatureTilesMock = {
+  kind: "tiles"
+  footnote: string
+  tiles: FeatureMockTile[]
+  title: string
+}
+
+/**
+ * The small interface mock paired with a feature story. Every variant is coded
+ * markup rather than a screenshot, so it inherits the page theme and the
+ * product accent instead of going stale next to a redesign.
+ */
+export type FeatureMock =
+  | FeatureMenuBarMock
+  | FeatureStatusMock
+  | FeatureTerminalMock
+  | FeatureTilesMock
+
+/**
+ * A feature promoted from a grid card to its own full-width section, pairing
+ * the copy with a mock of that specific capability.
+ */
+export type LandingFeatureStory = {
+  /** Describes the mock to assistive technology; it is not a screenshot. */
+  ariaLabel: string
+  description: string
+  /** Short label above the title, e.g. "Menu bar". */
+  eyebrow: string
+  /** Supporting points listed under the description. */
+  highlights: string[]
+  icon: LucideIcon
+  mock: FeatureMock
+  title: string
+}
+
 export type LandingProduct = {
   name: string
   domain: string
@@ -135,5 +236,11 @@ export type LandingProduct = {
     description: string
     icon: LucideIcon
   }>
+  /**
+   * Opt-in upgrade for the feature section. When set, each entry renders as its
+   * own full-width section with a mock of that capability, and `features` is
+   * left unused. Products that omit it keep the icon-card grid.
+   */
+  featureStories?: LandingFeatureStory[]
   footerNote: string
 }
