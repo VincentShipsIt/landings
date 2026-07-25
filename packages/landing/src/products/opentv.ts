@@ -34,8 +34,6 @@ export const openTVTrackerLanding: LandingProduct = {
     ],
   },
   xUrl: "https://x.com/VincentShipsIt",
-  accent: "oklch(0.67 0.17 255)",
-  accentSoft: "oklch(0.93 0.07 255)",
   title: "Keep the shows. Lose the feed.",
   description:
     "A privacy-minded iPhone tracker for TV shows and movies, built for one person or two.",
