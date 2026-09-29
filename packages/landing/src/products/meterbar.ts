@@ -262,7 +262,7 @@ export const meterBarLanding: LandingProduct = {
       ariaLabel:
         "Mock of a terminal showing MeterBar holding no network connections and passing the macOS notarization check",
       description:
-        "Credentials never move. MeterBar has no account, no server, and nothing to upload — which is a claim you can check yourself in a terminal rather than take on trust.",
+        "Credentials never move. Out of the box MeterBar has no account, no server, and nothing to upload — which is a claim you can check yourself in a terminal rather than take on trust. The one exception is a public profile you turn on yourself.",
       eyebrow: "Privacy",
       highlights: [
         "No account to create and no telemetry to opt out of.",
@@ -291,7 +291,7 @@ export const meterBarLanding: LandingProduct = {
     label: "Privacy",
     heading: "It reads the sign-ins you already have.",
     description:
-      "MeterBar has no account, no server of its own, and no telemetry. Every provider it tracks is one you already logged into on this Mac, and it reads that existing session in place — it never asks you for a password and never copies a credential somewhere new. The full list is below, and all of it is checkable in the source.",
+      "MeterBar has no account and no telemetry, and it talks to no server of ours unless you turn on a public profile. Every provider it tracks is one you already logged into on this Mac, and it reads that existing session in place — it never asks you for a password and never copies a credential somewhere new. The full list is below, and all of it is checkable in the source.",
     reads: [
       {
         title: "Claude Code",
@@ -355,9 +355,9 @@ export const meterBarLanding: LandingProduct = {
     ],
     guaranteesHeading: "Also true",
     guarantees: [
-      "No account, no sign-up, and no MeterBar server for anything to be sent to.",
+      "No account, no sign-up, and no MeterBar server for anything to be sent to — unless you turn on a public profile.",
       "No analytics, no telemetry, no crash reporting.",
-      "Outbound requests go only to your own providers' usage endpoints.",
+      "Outbound requests go only to your own providers' usage endpoints. The exception is the public profile, which is off until you turn it on, sends only your limits and token totals (never a name, email, account, folder, or credential), and deletes its copy when you turn it off.",
       "The widget is sandboxed. The main app is not, because it has to read other tools' files — hardened runtime is enabled for both.",
       "MIT licensed, so every path listed here can be checked against the source.",
     ],

@@ -47,3 +47,20 @@ bunx --bun shadcn@latest add button
 
 The apps are intentionally thin. Add reusable UI to `packages/landing` or
 `packages/ui`; keep app-local files limited to metadata, assets, and routing.
+
+## MeterBar public profiles
+
+`apps/meterbardev` serves the opt-in public profiles the MeterBar app publishes
+(`meterbar.dev/u/<slug>`). This is MeterBar-only behaviour, so it lives in that
+app rather than in `packages/landing`. The contract with the app is
+`docs/public-profile-contract.md` in `VincentShipsIt/meterbar.dev`.
+
+- `PUT|DELETE /api/profile/<slug>` stores or deletes one JSON document, keyed by
+  the SHA-256 of the publisher's key. Records expire 7 days after the last write.
+- `/u/<slug>` renders it; `/u/<slug>/og` is the 1200x630 card used by
+  Open Graph and X. Both are `noindex`, and a delete expires the cached copy at once.
+- Storage is Upstash Redis. Add the Upstash integration to the Vercel project;
+  it injects `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or set
+  `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`). With neither set,
+  `next dev` uses an in-memory store and production answers 503.
+- Tests: `cd apps/meterbardev && bun test`.
