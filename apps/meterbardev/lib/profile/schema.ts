@@ -58,6 +58,9 @@ const KNOWN_PROVIDERS = new Set([
   "Cursor",
   "OpenRouter",
   "Grok",
+  "Kimi Code",
+  "Z.ai Coding Plan",
+  "GitHub Copilot",
 ])
 
 // Same character sets as the app's sanitizers.

@@ -61,6 +61,13 @@ app rather than in `packages/landing`. The contract with the app is
   Open Graph and X. The page and card are served fresh with
   no browser/CDN caching, so deletion and storage expiry apply on the next
   request. Social platforms can retain their own copies.
+- Schema 1 accepts exactly these Swift raw provider tokens in quota cards and
+  model receipts: `Claude Code`, `Codex CLI`, `Cursor`, `OpenRouter`, `Grok`,
+  `Kimi Code`, `Z.ai Coding Plan`, and `GitHub Copilot`. Display names such as
+  `Z.ai GLM Coding Plan` are labels, never wire identities. New providers use the
+  existing neutral color fallback. Synthetic fixture provenance is pinned in
+  `apps/meterbardev/lib/profile/test-support/wire.ts`; usage-only Copilot states
+  without a valid quota window remain omitted by the app.
 - Storage is Upstash Redis. Add the Upstash integration to the Vercel project;
   it injects `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or set
   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`). With neither set,

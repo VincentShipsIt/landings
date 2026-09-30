@@ -8,6 +8,8 @@ import {
   SCHEMA_VERSION,
 } from "./schema"
 
+import { newProviderFixture, WIRE_PROVIDERS } from "./test-support/wire"
+
 const valid = {
   schema: 1,
   updatedAt: "2026-09-29T20:00:00Z",
@@ -136,5 +138,81 @@ describe("parseProfile", () => {
     doc.providers[0].windows[0].pace = null
     doc.providers[0].windows[0].resetsAt = null
     expect(parseProfile(doc)).not.toBeNull()
+  })
+})
+
+describe("Swift provider wire compatibility", () => {
+  test("accepts all eight raw tokens in cards and receipt models", () => {
+    for (const provider of WIRE_PROVIDERS) {
+      const doc = structuredClone(newProviderFixture)
+      doc.providers = [{ ...doc.providers[0]!, provider }]
+      doc.receipt!.models = [{ provider, name: "synthetic-model", tokens: 6 }]
+      expect(parseProfile(doc)).toEqual(doc)
+    }
+    const allCards = structuredClone(newProviderFixture)
+    allCards.providers = WIRE_PROVIDERS.map((provider) => ({
+      ...allCards.providers[0]!,
+      provider,
+    }))
+    expect(parseProfile(allCards)).toEqual(allCards)
+  })
+
+  test("keeps display names separate from exact wire identities", () => {
+    expect(parseProfile(newProviderFixture)).toEqual(newProviderFixture)
+    for (const provider of [
+      "Unknown Provider",
+      "Z.ai GLM Coding Plan",
+      "OpenAI Codex",
+      "me@example.com",
+      "/Users/me/profile",
+      "https://example.com/provider",
+    ]) {
+      const card = structuredClone(newProviderFixture)
+      card.providers[0]!.provider = provider
+      expect(parseProfile(card)).toBeNull()
+      const receipt = structuredClone(newProviderFixture)
+      receipt.receipt!.models[0]!.provider = provider
+      expect(parseProfile(receipt)).toBeNull()
+    }
+  })
+
+  test("new tokens do not relax window, name, plan or model sanitizers", () => {
+    for (const provider of WIRE_PROVIDERS.slice(5)) {
+      const doc = structuredClone(newProviderFixture)
+      doc.providers = [{ ...doc.providers[0]!, provider }]
+      doc.providers[0]!.windows = []
+      expect(parseProfile(doc)).toBeNull()
+      for (const unsafe of [
+        "me@example.com",
+        "/Users/me/profile",
+        "https://example.com/provider",
+      ]) {
+        for (const field of ["name", "plan"] as const) {
+          const card = structuredClone(newProviderFixture)
+          card.providers[0]!.provider = provider
+          card.providers[0]![field] = unsafe
+          expect(parseProfile(card)).toBeNull()
+        }
+        for (const field of ["label", "pace"] as const) {
+          const card = structuredClone(newProviderFixture)
+          card.providers[0]!.provider = provider
+          card.providers[0]!.windows[0]![field] = unsafe
+          expect(parseProfile(card)).toBeNull()
+        }
+        const receipt = structuredClone(newProviderFixture)
+        receipt.receipt!.models[0]!.provider = provider
+        receipt.receipt!.models[0]!.name = unsafe
+        expect(parseProfile(receipt)).toBeNull()
+      }
+    }
+  })
+
+  test("rebuilds new-provider fixtures without unexpected private fields", () => {
+    const doc = structuredClone(newProviderFixture) as Record<string, any>
+    doc.email = "me@example.com"
+    doc.providers[0].accountName = "me@example.com"
+    doc.providers[0].windows[0].path = "/Users/me/profile"
+    doc.receipt.models[0].url = "https://example.com/provider"
+    expect(parseProfile(doc)).toEqual(newProviderFixture)
   })
 })

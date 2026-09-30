@@ -4,6 +4,8 @@ import { GET } from "../../app/u/[slug]/og/route"
 import { getPublicProfile } from "./cache"
 import { deleteProfile, writeProfile } from "./service"
 import { getProfileStore } from "./store"
+import { newProviderFixture } from "./test-support/wire"
+import { providerColor } from "./view"
 
 const slug = "0123456789"
 const key = "C".repeat(43)
@@ -55,4 +57,29 @@ test("invalid and missing slugs never produce a cacheable card", async () => {
     expect(response.status).toBe(404)
     expect(response.headers.get("Cache-Control")).toBe("no-store")
   }
+})
+
+test("accepted new-provider fixture renders a real no-store PNG with neutral colors", async () => {
+  const slug = "abcdefghjk"
+  const store = getProfileStore()!
+  expect(
+    await writeProfile(store, {
+      slug,
+      key,
+      address: "203.0.113.2",
+      body: newProviderFixture,
+    })
+  ).toBe("ok")
+  expect(await getPublicProfile(slug)).toEqual(newProviderFixture)
+  for (const provider of newProviderFixture.providers) {
+    expect(providerColor(provider.provider)).toBe("#9e9e9e")
+  }
+  const response = await GET(request, { params: Promise.resolve({ slug }) })
+  expect(response.status).toBe(200)
+  expect(response.headers.get("Cache-Control")).toBe("no-store")
+  const png = new DataView(await response.arrayBuffer())
+  expect(png.getUint32(0)).toBe(0x89504e47)
+  expect(png.getUint32(16)).toBe(1200)
+  expect(png.getUint32(20)).toBe(630)
+  expect(await deleteProfile(store, { slug, key })).toBe("ok")
 })
