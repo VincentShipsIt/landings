@@ -27,4 +27,11 @@ jobs:
 
       - run: bun run typecheck
 
+      - name: Install Redis for profile storage regression tests
+        run: sudo apt-get update && sudo apt-get install -y redis-server
+
+      - name: MeterBar profile tests
+        run: bun test
+        working-directory: apps/meterbardev
+
       - run: bun run build
