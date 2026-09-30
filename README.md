@@ -58,9 +58,24 @@ app rather than in `packages/landing`. The contract with the app is
 - `PUT|DELETE /api/profile/<slug>` stores or deletes one JSON document, keyed by
   the SHA-256 of the publisher's key. Records expire 7 days after the last write.
 - `/u/<slug>` renders it; `/u/<slug>/og` is the 1200x630 card used by
-  Open Graph and X. Both are `noindex`, and a delete expires the cached copy at once.
+  Open Graph and X. The page and card are served fresh with
+  no browser/CDN caching, so deletion and storage expiry apply on the next
+  request. Social platforms can retain their own copies.
 - Storage is Upstash Redis. Add the Upstash integration to the Vercel project;
   it injects `KV_REST_API_URL` / `KV_REST_API_TOKEN` (or set
   `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN`). With neither set,
   `next dev` uses an in-memory store and production answers 503.
-- Tests: `cd apps/meterbardev && bun test`.
+- Tests: `cd apps/meterbardev && bun test`. Storage regressions require local
+  `redis-server` and `redis-cli` (Redis 7+); tests start a private temporary Unix
+  socket with persistence disabled and exercise the production Upstash SDK.
+  CI installs Redis and runs these tests before the build.
+
+Before enabling production profiles, explicitly choose the Vercel team/project,
+Upstash account/database/region and plan/billing limits. Add one matched URL/token
+pair above through the approved hosting integration, separately for preview and
+production as needed. No storage is provisioned by this repository. Fresh page
+and card reads each use storage commands; budget for reads as well as writes.
+After review, CI and the approved deployment, verify missing-storage 503,
+authenticated publish/update/delete, expiry/reclaim, no-store page/card responses,
+and the social preview validators using a separately authorized synthetic profile.
+Do not use real local usage for deployment smoke tests.

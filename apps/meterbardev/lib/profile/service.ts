@@ -47,8 +47,14 @@ export async function writeProfile(
   if (existing) {
     if (!keyMatches(existing.keyHash, keyHash)) return "forbidden"
     if (now - existing.storedAt < MIN_WRITE_INTERVAL_MS) return "too_soon"
-    if (await store.setIfPresent(input.slug, value)) return "ok"
-    // Expired between the read and the write: fall through and claim it again.
+    const outcome = await store.updateOwned(
+      input.slug,
+      value,
+      MIN_WRITE_INTERVAL_MS
+    )
+    if (outcome !== "missing") return outcome
+    // Expired between read and update. NX below may reclaim a free slug, but
+    // cannot overwrite a new owner that claimed it in the meantime.
   }
 
   const claims = await store.count(addressBucket(input.address, now), 3600)
@@ -64,11 +70,7 @@ export async function deleteProfile(
   input: { slug: string; key: string }
 ): Promise<DeleteOutcome> {
   if (!KEY_PATTERN.test(input.key)) return "invalid"
-  const existing = await store.get(input.slug)
-  if (!existing) return "ok"
-  if (!keyMatches(existing.keyHash, hashKey(input.key))) return "forbidden"
-  await store.delete(input.slug)
-  return "ok"
+  return store.deleteOwned(input.slug, hashKey(input.key))
 }
 
 /** The public view: the document and nothing that authorizes writes. */

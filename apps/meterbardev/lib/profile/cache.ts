@@ -1,33 +1,22 @@
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
+import { cache } from "react"
 
 import { readProfile } from "./service"
-import type { ProfileDocument } from "./schema"
 import { getProfileStore } from "./store"
 
-export const PAGE_REVALIDATE_SECONDS = 60
-
-export const profileTag = (slug: string) => `profile:${slug}`
-
 /**
- * The profile as the public page and card see it, cached for a minute so page
- * views do not spend a storage command each. A write or a delete expires the
- * entry at once (see `expireProfile`), so an unpublished profile is not served
- * from this cache.
+ * Dedupe metadata/page reads within a server render only. Never retain profile
+ * data across requests: deleted and Redis-expired records must disappear at
+ * once, including when an older read was in flight during deletion.
  */
-export const getCachedProfile = (
-  slug: string
-): Promise<ProfileDocument | null> =>
-  unstable_cache(
-    async () => {
-      const store = getProfileStore()
-      return store ? readProfile(store, slug) : null
-    },
-    ["public-profile", slug],
-    { revalidate: PAGE_REVALIDATE_SECONDS, tags: [profileTag(slug)] }
-  )()
+export const getPublicProfile = cache(async (slug: string) => {
+  const store = getProfileStore()
+  return store ? readProfile(store, slug) : null
+})
 
-/** Drops every cached copy of a profile now, not after the stale window. */
+/** Also invalidate entries created by the previous cached implementation. */
 export function expireProfile(slug: string) {
-  revalidateTag(profileTag(slug), { expire: 0 })
+  revalidateTag(`profile:${slug}`, { expire: 0 })
   revalidatePath(`/u/${slug}`)
+  revalidatePath(`/u/${slug}/og`)
 }

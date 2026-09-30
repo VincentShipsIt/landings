@@ -5,7 +5,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { ProfileShareButtons } from "@/components/profile-share-buttons"
-import { getCachedProfile } from "@/lib/profile/cache"
+import { getPublicProfile } from "@/lib/profile/cache"
 import { isValidSlug, type ProfileDocument } from "@/lib/profile/schema"
 import {
   BAND_COLOR,
@@ -17,9 +17,8 @@ import {
   relativeTime,
 } from "@/lib/profile/view"
 
-// Must be a literal: Next reads segment config statically. Keep it equal to
-// PAGE_REVALIDATE_SECONDS in lib/profile/cache.ts.
-export const revalidate = 60
+// Profile availability is checked on every request; no shared HTML/RSC cache.
+export const dynamic = "force-dynamic"
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -27,7 +26,7 @@ const TITLE = "AI coding limits on MeterBar"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const profile = isValidSlug(slug) ? await getCachedProfile(slug) : null
+  const profile = isValidSlug(slug) ? await getPublicProfile(slug) : null
   // A profile page is shared as a link, not a search result: keep it out of
   // indexes, and give a missing one nothing to preview.
   if (!profile) return { robots: { follow: false, index: false }, title: TITLE }
@@ -197,7 +196,7 @@ function Receipt({
 export default async function ProfilePage({ params }: Props) {
   const { slug } = await params
   if (!isValidSlug(slug)) notFound()
-  const profile = await getCachedProfile(slug)
+  const profile = await getPublicProfile(slug)
   if (!profile) notFound()
   const url = `https://meterbar.dev/u/${slug}`
 

@@ -1,6 +1,7 @@
+import { readProfileBody } from "@/lib/profile/body"
 import { expireProfile } from "@/lib/profile/cache"
 import { deleteProfile, writeProfile } from "@/lib/profile/service"
-import { isValidSlug, MAX_BODY_BYTES } from "@/lib/profile/schema"
+import { isValidSlug } from "@/lib/profile/schema"
 import { getProfileStore } from "@/lib/profile/store"
 
 /**
@@ -42,21 +43,12 @@ export async function PUT(request: Request, { params }: Context) {
   const key = bearerKey(request)
   if (!key) return respond(401)
 
-  const declared = Number(request.headers.get("content-length") ?? 0)
-  if (declared > MAX_BODY_BYTES) return respond(413)
-  const raw = await request.text()
-  if (raw.length > MAX_BODY_BYTES) return respond(413)
-
-  let body: unknown
-  try {
-    body = JSON.parse(raw)
-  } catch {
-    return respond(400)
-  }
+  const parsed = await readProfileBody(request)
+  if (parsed.status) return respond(parsed.status)
 
   const outcome = await writeProfile(store, {
     address: callerAddress(request),
-    body,
+    body: parsed.body,
     key,
     slug,
   })

@@ -13,19 +13,48 @@ export type StoredProfile = {
   storedAt: number
 }
 
-/** The four operations the profile service needs from a key-value store. */
+export type UpdateOutcome = "ok" | "missing" | "forbidden" | "too_soon"
+export type OwnedDeleteOutcome = "ok" | "forbidden"
+
+/** Ownership checks and mutations must run as one indivisible operation. */
 export interface ProfileStore {
   get(slug: string): Promise<StoredProfile | null>
   /** Writes only if the slug is free. Returns whether it wrote. */
   setIfAbsent(slug: string, value: StoredProfile): Promise<boolean>
-  /** Writes only if the slug exists. Returns whether it wrote. */
-  setIfPresent(slug: string, value: StoredProfile): Promise<boolean>
-  delete(slug: string): Promise<void>
+  /** Checks the current owner and write floor, then refreshes the record/TTL. */
+  updateOwned(
+    slug: string,
+    value: StoredProfile,
+    minimumIntervalMs: number
+  ): Promise<UpdateOutcome>
+  /** Missing is success; another owner's record must remain untouched. */
+  deleteOwned(slug: string, keyHash: string): Promise<OwnedDeleteOutcome>
   /** Counts an event in a window, returning the new count. */
   count(bucket: string, windowSeconds: number): Promise<number>
 }
 
 const keyFor = (slug: string) => `profile:${slug}`
+
+// Redis runs each script atomically, including the GET, owner check and SET/DEL.
+const UPDATE_OWNED = `
+local raw = redis.call("GET", KEYS[1])
+if not raw then return "missing" end
+local current = cjson.decode(raw)
+if current.keyHash ~= ARGV[1] then return "forbidden" end
+if tonumber(ARGV[2]) - current.storedAt < tonumber(ARGV[3]) then
+  return "too_soon"
+end
+redis.call("SET", KEYS[1], ARGV[4], "EX", ARGV[5])
+return "ok"
+`
+
+const DELETE_OWNED = `
+local raw = redis.call("GET", KEYS[1])
+if not raw then return "ok" end
+if cjson.decode(raw).keyHash ~= ARGV[1] then return "forbidden" end
+redis.call("DEL", KEYS[1])
+return "ok"
+`
 
 export class UpstashProfileStore implements ProfileStore {
   constructor(private readonly redis: Redis) {}
@@ -42,21 +71,40 @@ export class UpstashProfileStore implements ProfileStore {
     return result === "OK"
   }
 
-  async setIfPresent(slug: string, value: StoredProfile) {
-    const result = await this.redis.set(keyFor(slug), value, {
-      ex: PROFILE_TTL_SECONDS,
-      xx: true,
-    })
-    return result === "OK"
+  async updateOwned(
+    slug: string,
+    value: StoredProfile,
+    minimumIntervalMs: number
+  ): Promise<UpdateOutcome> {
+    return this.redis.eval(
+      UPDATE_OWNED,
+      [keyFor(slug)],
+      [
+        value.keyHash,
+        value.storedAt,
+        minimumIntervalMs,
+        JSON.stringify(value),
+        PROFILE_TTL_SECONDS,
+      ]
+    )
   }
 
-  async delete(slug: string) {
-    await this.redis.del(keyFor(slug))
+  async deleteOwned(
+    slug: string,
+    keyHash: string
+  ): Promise<OwnedDeleteOutcome> {
+    return this.redis.eval(DELETE_OWNED, [keyFor(slug)], [keyHash])
   }
 
   async count(bucket: string, windowSeconds: number) {
-    const value = await this.redis.incr(`rate:${bucket}`)
-    if (value === 1) await this.redis.expire(`rate:${bucket}`, windowSeconds)
+    const key = `rate:${bucket}`
+    // NX repairs an existing counter without a TTL, without extending a live
+    // window. MULTI/EXEC prevents an interrupted request leaving a bare INCR.
+    const [value] = await this.redis
+      .multi()
+      .incr(key)
+      .expire(key, windowSeconds, "NX")
+      .exec<[number, number]>()
     return value
   }
 }
@@ -75,29 +123,38 @@ export class MemoryProfileStore implements ProfileStore {
   constructor(private readonly now: () => number = Date.now) {}
 
   async get(slug: string) {
-    const item = this.items.get(keyFor(slug))
-    if (!item) return null
-    if (item.expires <= this.now()) {
-      this.items.delete(keyFor(slug))
-      return null
-    }
-    return structuredClone(item.value)
+    const value = this.current(slug)
+    return value ? structuredClone(value) : null
   }
 
   async setIfAbsent(slug: string, value: StoredProfile) {
-    if (await this.get(slug)) return false
+    if (this.current(slug)) return false
     this.write(slug, value)
     return true
   }
 
-  async setIfPresent(slug: string, value: StoredProfile) {
-    if (!(await this.get(slug))) return false
+  async updateOwned(
+    slug: string,
+    value: StoredProfile,
+    minimumIntervalMs: number
+  ): Promise<UpdateOutcome> {
+    // No await between reading and mutating: mirrors the Redis script.
+    const current = this.current(slug)
+    if (!current) return "missing"
+    if (current.keyHash !== value.keyHash) return "forbidden"
+    if (value.storedAt - current.storedAt < minimumIntervalMs) return "too_soon"
     this.write(slug, value)
-    return true
+    return "ok"
   }
 
-  async delete(slug: string) {
+  async deleteOwned(
+    slug: string,
+    keyHash: string
+  ): Promise<OwnedDeleteOutcome> {
+    const current = this.current(slug)
+    if (current && current.keyHash !== keyHash) return "forbidden"
     this.items.delete(keyFor(slug))
+    return "ok"
   }
 
   async count(bucket: string, windowSeconds: number) {
@@ -116,6 +173,16 @@ export class MemoryProfileStore implements ProfileStore {
   /** Test helper: the stored bytes, to assert what a store would hold. */
   dump(): string {
     return JSON.stringify([...this.items.entries()])
+  }
+
+  private current(slug: string): StoredProfile | null {
+    const item = this.items.get(keyFor(slug))
+    if (!item) return null
+    if (item.expires <= this.now()) {
+      this.items.delete(keyFor(slug))
+      return null
+    }
+    return item.value
   }
 
   private write(slug: string, value: StoredProfile) {
