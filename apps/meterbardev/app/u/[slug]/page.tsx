@@ -15,6 +15,10 @@ import {
   percentLeft,
   providerColor,
   relativeTime,
+  visibleWindows,
+  windowDetails,
+  windowShowsBar,
+  windowValue,
 } from "@/lib/profile/view"
 
 // Profile availability is checked on every request; no shared HTML/RSC cache.
@@ -97,8 +101,9 @@ function ProviderCard({
           ) : null}
         </div>
         <ul className="flex flex-col gap-3">
-          {provider.windows.map((window) => {
+          {visibleWindows(provider).map((window) => {
             const left = percentLeft(window)
+            const detail = windowDetails(window)
             return (
               <li className="flex flex-col gap-1.5" key={window.label}>
                 <div className="flex items-baseline justify-between gap-3">
@@ -107,21 +112,14 @@ function ProviderCard({
                     className="text-sm font-semibold tabular-nums"
                     style={{ color: BAND_COLOR[bandFor(left)] }}
                   >
-                    {left}% left
+                    {windowValue(window)}
                   </span>
                 </div>
-                <LimitBar used={window.usedPercent} />
-                {window.pace || window.resetsAt ? (
-                  <p className="text-xs text-muted-foreground">
-                    {[
-                      window.pace,
-                      window.resetsAt
-                        ? `resets ${new Date(window.resetsAt).toUTCString().replace(" GMT", " UTC")}`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
+                {windowShowsBar(window) ? (
+                  <LimitBar used={window.usedPercent} />
+                ) : null}
+                {detail ? (
+                  <p className="text-xs text-muted-foreground">{detail}</p>
                 ) : null}
               </li>
             )
