@@ -43,11 +43,103 @@ export function bandFor(left: number): Band {
   return "healthy"
 }
 
-/** The window with the least room left in one provider. */
-export function tightestWindow(provider: ProfileProvider): ProfileWindow {
-  return provider.windows.reduce((tightest, window) =>
-    percentLeft(window) < percentLeft(tightest) ? window : tightest
+// Compatibility for schema-1 uploads predating explicit availability roles.
+// These are the app's routed provider-window labels, never model names.
+const LEGACY_PROVIDER_LABELS = new Set([
+  "Session",
+  "Weekly",
+  "Monthly",
+  "Daily",
+  "Billing cycle",
+  "Quota",
+  "Cursor Models",
+  "Other Models",
+  "Key limit",
+  "Account credits",
+])
+
+const isProviderWindow = (window: ProfileWindow) =>
+  window.role === "provider" ||
+  (window.role === undefined && LEGACY_PROVIDER_LABELS.has(window.label))
+
+const isOut = (window: ProfileWindow) =>
+  window.usedPercent >= 100 && !window.isEstimated
+
+function hasCursorSpillover(provider: ProfileProvider): boolean {
+  return (
+    provider.provider === "Cursor" &&
+    provider.windows.some((window) => window.label === "Cursor Models") &&
+    provider.windows.some((window) => window.label === "Other Models")
   )
+}
+
+export function blockingWindows(provider: ProfileProvider): ProfileWindow[] {
+  if (provider.isBlocked === false) return []
+  const windows = provider.windows.filter(isProviderWindow)
+  if (hasCursorSpillover(provider) && !windows.every(isOut)) return []
+  return windows.filter(isOut)
+}
+
+/** A blocked provider shows only the windows determining recovery. */
+export function visibleWindows(provider: ProfileProvider): ProfileWindow[] {
+  const blockers = blockingWindows(provider)
+  return blockers.length ? blockers : provider.windows
+}
+
+/** The app's primary window, including Cursor spillover and model exclusions. */
+export function tightestWindow(provider: ProfileProvider): ProfileWindow {
+  const primary =
+    provider.primaryWindowIndex === undefined
+      ? undefined
+      : provider.windows[provider.primaryWindowIndex]
+  if (primary) return primary
+  const blockers = blockingWindows(provider)
+  if (blockers.length) {
+    // Unknown reset data must not promise an earlier recovery.
+    return (
+      blockers.find((window) => !window.resetsAt) ??
+      blockers.reduce((latest, window) =>
+        Date.parse(window.resetsAt!) > Date.parse(latest.resetsAt!)
+          ? window
+          : latest
+      )
+    )
+  }
+  const candidates = provider.windows.filter(isProviderWindow)
+  const windows = candidates.length ? candidates : provider.windows
+  return windows.reduce((best, window) =>
+    hasCursorSpillover(provider)
+      ? percentLeft(window) > percentLeft(best)
+        ? window
+        : best
+      : percentLeft(window) < percentLeft(best)
+        ? window
+        : best
+  )
+}
+
+export const windowShowsBar = (window: ProfileWindow) => !isOut(window)
+
+export const windowValue = (window: ProfileWindow) =>
+  isOut(window)
+    ? "Out of quota"
+    : `${window.isEstimated ? "~" : ""}${percentLeft(window)}% left`
+
+export function windowDetails(window: ProfileWindow, now = Date.now()): string {
+  const reset = window.resetsAt ? Date.parse(window.resetsAt) : null
+  const resetText =
+    reset !== null && reset > now
+      ? `resets ${new Date(reset).toUTCString().replace(" GMT", " UTC")}`
+      : reset !== null && now - reset <= 5 * 60 * 1000
+        ? "reset due now"
+        : null
+  return [
+    isOut(window) ? null : window.pace,
+    resetText,
+    isOut(window) && !resetText ? "reset unavailable" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ")
 }
 
 export type Headline = {
@@ -93,6 +185,6 @@ export function relativeTime(iso: string, now: number = Date.now()): string {
 export function cardAlt(document: ProfileDocument): string {
   const top = headline(document)
   return top
-    ? `${top.left}% left on ${top.provider.name} ${top.window.label}. AI coding limits on MeterBar.`
+    ? `${top.window.isEstimated ? "~" : ""}${top.left}% left on ${top.provider.name} ${top.window.label}. AI coding limits on MeterBar.`
     : "AI coding limits on MeterBar."
 }

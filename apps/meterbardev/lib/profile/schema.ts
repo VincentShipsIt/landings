@@ -27,6 +27,8 @@ export type ProfileWindow = {
   usedPercent: number
   resetsAt: string | null
   pace: string | null
+  role?: "provider" | "secondary"
+  isEstimated?: boolean
 }
 
 export type ProfileProvider = {
@@ -34,6 +36,8 @@ export type ProfileProvider = {
   name: string
   plan: string | null
   windows: ProfileWindow[]
+  primaryWindowIndex?: number
+  isBlocked?: boolean
 }
 
 export type ProfileModel = { provider: string; name: string; tokens: number }
@@ -123,7 +127,19 @@ function parseWindow(value: unknown): ProfileWindow | null {
     resetsAt = isoDate(value.resetsAt)
     if (resetsAt === null) return null
   }
-  return { label, usedPercent: used, resetsAt, pace }
+  const role = value.role
+  const isEstimated = value.isEstimated
+  if (role !== undefined && role !== "provider" && role !== "secondary")
+    return null
+  if (isEstimated !== undefined && typeof isEstimated !== "boolean") return null
+  return {
+    label,
+    usedPercent: used,
+    resetsAt,
+    pace,
+    ...(role === undefined ? {} : { role }),
+    ...(isEstimated === undefined ? {} : { isEstimated }),
+  }
 }
 
 function parseProvider(value: unknown): ProfileProvider | null {
@@ -144,7 +160,25 @@ function parseProvider(value: unknown): ProfileProvider | null {
   }
   const windows = value.windows.map(parseWindow)
   if (windows.some((window) => window === null)) return null
-  return { provider, name, plan, windows: windows as ProfileWindow[] }
+  const primaryWindowIndex = value.primaryWindowIndex
+  const isBlocked = value.isBlocked
+  if (
+    primaryWindowIndex !== undefined &&
+    (typeof primaryWindowIndex !== "number" ||
+      !Number.isInteger(primaryWindowIndex) ||
+      primaryWindowIndex < 0 ||
+      primaryWindowIndex >= windows.length)
+  )
+    return null
+  if (isBlocked !== undefined && typeof isBlocked !== "boolean") return null
+  return {
+    provider,
+    name,
+    plan,
+    windows: windows as ProfileWindow[],
+    ...(primaryWindowIndex === undefined ? {} : { primaryWindowIndex }),
+    ...(isBlocked === undefined ? {} : { isBlocked }),
+  }
 }
 
 function parseReceipt(value: unknown): ProfileReceipt | null | false {

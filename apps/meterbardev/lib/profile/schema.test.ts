@@ -216,3 +216,35 @@ describe("Swift provider wire compatibility", () => {
     expect(parseProfile(doc)).toEqual(newProviderFixture)
   })
 })
+
+describe("availability contract", () => {
+  test("preserves only validated optional availability metadata", () => {
+    const doc = clone() as Record<string, any>
+    Object.assign(doc.providers[0], { primaryWindowIndex: 0, isBlocked: false })
+    Object.assign(doc.providers[0].windows[0], {
+      role: "provider",
+      isEstimated: false,
+    })
+    const stored = parseProfile(doc)!
+    expect(stored.providers[0]?.primaryWindowIndex).toBe(0)
+    expect(stored.providers[0]?.isBlocked).toBe(false)
+    expect(stored.providers[0]?.windows[0]?.role).toBe("provider")
+    for (const index of [-1, 1, 1.5, "0"]) {
+      doc.providers[0].primaryWindowIndex = index
+      expect(parseProfile(doc)).toBeNull()
+    }
+  })
+  test("rejects metadata outside its enum and boolean allowlists", () => {
+    for (const [field, bad] of [
+      ["role", "me@example.com"],
+      ["isEstimated", "false"],
+    ]) {
+      const doc = clone() as Record<string, any>
+      doc.providers[0].windows[0][field as string] = bad
+      expect(parseProfile(doc)).toBeNull()
+    }
+    const doc = clone() as Record<string, any>
+    doc.providers[0].isBlocked = "false"
+    expect(parseProfile(doc)).toBeNull()
+  })
+})

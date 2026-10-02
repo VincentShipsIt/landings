@@ -10,6 +10,8 @@ import {
   percentLeft,
   providerColor,
   tightestWindow,
+  windowShowsBar,
+  windowValue,
 } from "./view"
 
 export const CARD_SIZE = { height: 630, width: 1200 }
@@ -129,6 +131,7 @@ export function renderProfileCard(document: ProfileDocument) {
                   lineHeight: 1,
                 }}
               >
+                {top.window.isEstimated ? "~" : ""}
                 {top.left}%
               </div>
               <div
@@ -174,7 +177,7 @@ export function renderProfileCard(document: ProfileDocument) {
             justifyContent: "center",
           }}
         >
-          {rows.map(({ band, left, provider, window }) => (
+          {rows.map(({ band, provider, window }) => (
             <div
               key={provider.name}
               style={{ display: "flex", flexDirection: "column", gap: 10 }}
@@ -215,27 +218,29 @@ export function renderProfileCard(document: ProfileDocument) {
                     fontWeight: 700,
                   }}
                 >
-                  {left}% left
+                  {windowValue(window)}
                 </div>
               </div>
-              <div
-                style={{
-                  background: TRACK,
-                  borderRadius: 999,
-                  display: "flex",
-                  height: 16,
-                  width: "100%",
-                }}
-              >
+              {windowShowsBar(window) ? (
                 <div
                   style={{
-                    background: BAND_COLOR[band],
+                    background: TRACK,
                     borderRadius: 999,
+                    display: "flex",
                     height: 16,
-                    width: `${Math.max(2, window.usedPercent)}%`,
+                    width: "100%",
                   }}
-                />
-              </div>
+                >
+                  <div
+                    style={{
+                      background: BAND_COLOR[band],
+                      borderRadius: 999,
+                      height: 16,
+                      width: `${Math.max(2, window.usedPercent)}%`,
+                    }}
+                  />
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
