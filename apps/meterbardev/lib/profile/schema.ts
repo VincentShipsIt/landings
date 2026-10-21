@@ -65,6 +65,9 @@ const KNOWN_PROVIDERS = new Set([
   "Kimi Code",
   "Z.ai Coding Plan",
   "GitHub Copilot",
+  "xAI",
+  "Muse Code",
+  "Claude Platform",
 ])
 
 // Same character sets as the app's sanitizers.
