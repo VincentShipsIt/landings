@@ -142,7 +142,7 @@ describe("parseProfile", () => {
 })
 
 describe("Swift provider wire compatibility", () => {
-  test("accepts all eight raw tokens in cards and receipt models", () => {
+  test("accepts all current raw tokens in cards and receipt models", () => {
     for (const provider of WIRE_PROVIDERS) {
       const doc = structuredClone(newProviderFixture)
       doc.providers = [{ ...doc.providers[0]!, provider }]
@@ -155,6 +155,15 @@ describe("Swift provider wire compatibility", () => {
       provider,
     }))
     expect(parseProfile(allCards)).toEqual(allCards)
+  })
+
+  test("retains older Cursor and Grok uploads", () => {
+    for (const provider of ["Cursor", "Grok"]) {
+      const doc = structuredClone(newProviderFixture)
+      doc.providers = [{ ...doc.providers[0]!, provider }]
+      doc.receipt!.models = [{ provider, name: "synthetic-model", tokens: 6 }]
+      expect(parseProfile(doc)).toEqual(doc)
+    }
   })
 
   test("keeps display names separate from exact wire identities", () => {
@@ -177,7 +186,7 @@ describe("Swift provider wire compatibility", () => {
   })
 
   test("new tokens do not relax window, name, plan or model sanitizers", () => {
-    for (const provider of WIRE_PROVIDERS.slice(5)) {
+    for (const provider of WIRE_PROVIDERS) {
       const doc = structuredClone(newProviderFixture)
       doc.providers = [{ ...doc.providers[0]!, provider }]
       doc.providers[0]!.windows = []

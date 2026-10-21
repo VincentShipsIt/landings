@@ -1,25 +1,25 @@
 import type { ProfileDocument } from "../schema"
 
-// Synthetic schema-1 fixtures, not captured usage. Wire tokens inspected from
-// Packages/MeterBarShared/Sources/MeterBarShared/ServiceType.swift at provider
-// head c56f72ba0295b46cb833eb3a8639d3843f7964a3. Card and receipt rawValue
-// construction inspected in MeterBar/Models/PublicProfileDocument.swift at
-// app head 585d862f47193fa988894d020e3144817b15e918.
+// Synthetic schema-1 fixtures, not captured usage. Current wire identities from
+// MeterBarShared ServiceType.swift at app head 99378cae61fa497caa614c1b3425acd1abac830a.
 export const WIRE_PROVIDERS = [
   "Claude Code",
   "Codex CLI",
-  "Cursor",
+  "xAI",
   "OpenRouter",
-  "Grok",
   "Kimi Code",
   "Z.ai Coding Plan",
   "GitHub Copilot",
+  "Muse Code",
+  "Claude Platform",
 ] as const
+
+const newProviders = ["xAI", "Muse Code", "Claude Platform"]
 
 export const newProviderFixture: ProfileDocument = {
   schema: 1,
   updatedAt: "2026-09-30T08:00:00.000Z",
-  providers: WIRE_PROVIDERS.slice(5).map((provider) => ({
+  providers: newProviders.map((provider) => ({
     provider,
     name: provider === "Z.ai Coding Plan" ? "Z.ai GLM Coding Plan" : provider,
     plan: null,
@@ -29,7 +29,7 @@ export const newProviderFixture: ProfileDocument = {
   receipt: {
     tokens30d: 6,
     sessions: null,
-    models: WIRE_PROVIDERS.slice(5).map((provider, index) => ({
+    models: newProviders.map((provider, index) => ({
       provider,
       name: "synthetic-model",
       tokens: index + 1,
