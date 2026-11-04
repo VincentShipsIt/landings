@@ -1289,6 +1289,17 @@ function SiteFooter({ product }: ProductProps) {
           <a className="hover:text-foreground" href={product.repoUrl}>
             Source
           </a>
+          {product.privacyPolicyPath ? (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              <a
+                className="hover:text-foreground"
+                href={product.privacyPolicyPath}
+              >
+                Privacy
+              </a>
+            </>
+          ) : null}
           {product.xUrl ? (
             <>
               <Separator orientation="vertical" className="h-4" />
