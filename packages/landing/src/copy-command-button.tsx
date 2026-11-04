@@ -1,7 +1,8 @@
 "use client"
 
 import { Check, Copy } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+
+import { useCopyToClipboard } from "./use-copy-to-clipboard"
 
 type CopyCommandButtonProps = {
   command: string
@@ -12,21 +13,7 @@ type CopyCommandButtonProps = {
  * reads as copyable text and does not compete with the two CTAs above it.
  */
 export function CopyCommandButton({ command }: CopyCommandButtonProps) {
-  const [copied, setCopied] = useState(false)
-  const resetTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-  useEffect(() => () => clearTimeout(resetTimer.current), [])
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(command)
-      setCopied(true)
-      clearTimeout(resetTimer.current)
-      resetTimer.current = setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard access denied; leave the chip unchanged.
-    }
-  }
+  const { copied, copy } = useCopyToClipboard(command)
 
   return (
     <button
