@@ -127,6 +127,7 @@ export const openTVTrackerLanding: LandingProduct = {
       icon: Cloud,
     },
   ],
+  privacyPolicyPath: "/privacy",
   footerNote:
     "Built by VincentShipsIt. Open source, private by default, no public activity feed.",
 }

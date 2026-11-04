@@ -324,5 +324,10 @@ export type LandingProduct = {
   featureStories?: LandingFeatureStory[]
   /** Rendered between the features and the gallery when set. */
   privacy?: LandingPrivacy
+  /**
+   * Site-relative path of a standalone privacy policy page (for example
+   * `/privacy`). When set, the footer links to it and the sitemap lists it.
+   */
+  privacyPolicyPath?: string
   footerNote: string
 }
