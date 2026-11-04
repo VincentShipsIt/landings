@@ -1249,7 +1249,7 @@ function xHandle(xUrl: string | undefined) {
   if (!xUrl) return undefined
 
   const handle = xUrl
-    .split(/[?#]/)[0]
+    .replace(/[?#].*$/, "")
     .replace(/\/+$/, "")
     .split("/")
     .pop()
