@@ -1242,14 +1242,15 @@ function PreviewCard({ product }: ProductProps) {
 
 /**
  * The handle is the last path segment of `xUrl`. Trailing slashes, query strings
- * and fragments are ignored so `https://x.com/name/` still yields `name`
- * instead of an empty string.
+ * and fragments are ignored so `https://x.com/name/` still yields `name`, and a
+ * bare host such as `https://x.com/` yields no handle instead of `x.com`.
  */
 function xHandle(xUrl: string | undefined) {
   if (!xUrl) return undefined
 
   const handle = xUrl
     .replace(/[?#].*$/, "")
+    .replace(/^https?:\/\/[^/]+/i, "")
     .replace(/\/+$/, "")
     .split("/")
     .pop()
