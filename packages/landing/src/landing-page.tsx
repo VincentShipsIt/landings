@@ -1241,13 +1241,30 @@ function PreviewCard({ product }: ProductProps) {
 }
 
 /**
+ * The handle is the last path segment of `xUrl`. Trailing slashes, query strings
+ * and fragments are ignored so `https://x.com/name/` still yields `name`
+ * instead of an empty string.
+ */
+function xHandle(xUrl: string | undefined) {
+  if (!xUrl) return undefined
+
+  const handle = xUrl
+    .split(/[?#]/)[0]
+    .replace(/\/+$/, "")
+    .split("/")
+    .pop()
+
+  return handle || undefined
+}
+
+/**
  * Renders the byline with the author's name linked to their X profile. The name
  * is matched against the handle already carried by `xUrl` rather than stored as
  * its own field, so the two can never drift apart. A byline that does not name
  * the handle — or a product with no `xUrl` — degrades to plain text.
  */
 function FooterByline({ product }: ProductProps) {
-  const handle = product.xUrl?.split("/").pop()
+  const handle = xHandle(product.xUrl)
   const segments = handle ? product.footerNote.split(handle) : []
 
   if (!handle || segments.length < 2) {
@@ -1289,11 +1306,11 @@ function SiteFooter({ product }: ProductProps) {
           <a className="hover:text-foreground" href={product.repoUrl}>
             Source
           </a>
-          {product.xUrl ? (
+          {product.xUrl && xHandle(product.xUrl) ? (
             <>
               <Separator orientation="vertical" className="h-4" />
               <a className="hover:text-foreground" href={product.xUrl}>
-                @{product.xUrl.split("/").pop()}
+                @{xHandle(product.xUrl)}
               </a>
             </>
           ) : null}

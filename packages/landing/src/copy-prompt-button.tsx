@@ -34,9 +34,9 @@ export function CopyPromptButton({ label, text }: CopyPromptButtonProps) {
       type="button"
     >
       {copied ? (
-        <Check data-icon="inline-start" />
+        <Check aria-hidden="true" data-icon="inline-start" />
       ) : (
-        <Copy data-icon="inline-start" />
+        <Copy aria-hidden="true" data-icon="inline-start" />
       )}
       {copied ? "Copied" : label}
     </button>
