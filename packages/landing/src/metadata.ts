@@ -53,7 +53,6 @@ export function createLandingSitemap(
       ? [
           {
             changeFrequency: "monthly" as const,
-            lastModified: new Date(),
             priority: 0.3,
             url: `https://${product.domain}${product.privacyPolicyPath}`,
           },

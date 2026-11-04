@@ -1278,7 +1278,7 @@ function SiteFooter({ product }: ProductProps) {
           <ProductMark product={product} compact />
           <FooterByline product={product} />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <a
             className="hover:text-foreground"
             href={`https://${product.domain}`}
