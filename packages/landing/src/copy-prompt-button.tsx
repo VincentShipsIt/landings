@@ -15,17 +15,23 @@ export function CopyPromptButton({ label, text }: CopyPromptButtonProps) {
   const { copied, copy } = useCopyToClipboard(text)
 
   return (
-    <button
-      className={cn(buttonVariants({ variant: "outline" }))}
-      onClick={copy}
-      type="button"
-    >
-      {copied ? (
-        <Check aria-hidden="true" data-icon="inline-start" />
-      ) : (
-        <Copy aria-hidden="true" data-icon="inline-start" />
-      )}
-      {copied ? "Copied" : label}
-    </button>
+    <>
+      <button
+        className={cn(buttonVariants({ variant: "outline" }))}
+        onClick={copy}
+        type="button"
+      >
+        {copied ? (
+          <Check aria-hidden="true" data-icon="inline-start" />
+        ) : (
+          <Copy aria-hidden="true" data-icon="inline-start" />
+        )}
+        {copied ? "Copied" : label}
+      </button>
+      {/* A button's text changing is not announced; a live region is. */}
+      <span className="sr-only" role="status">
+        {copied ? "Copied to clipboard" : ""}
+      </span>
+    </>
   )
 }
