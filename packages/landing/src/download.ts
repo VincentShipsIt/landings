@@ -51,6 +51,9 @@ const MIN_STARS = 25
  */
 const SOCIAL_PROOF_REVALIDATE = 3600
 
+/** Upper bound for any single GitHub API request. */
+const GITHUB_TIMEOUT_MS = 5000
+
 function isMacRequest(request: Request) {
   const clientPlatform = request.headers
     .get("sec-ch-ua-platform")
@@ -111,14 +114,24 @@ function githubHeaders(token?: string) {
 async function fetchGitHub(path: string, init: NextFetchInit) {
   const token = process.env.GITHUB_TOKEN?.trim()
   const url = `https://api.github.com${path}`
-  const response = await fetch(url, { ...init, headers: githubHeaders(token) })
+  // A slow GitHub API call must not hang `/download`; callers already fall back
+  // to the releases page when this rejects. Each attempt gets its own window.
+  const response = await fetch(url, {
+    ...init,
+    headers: githubHeaders(token),
+    signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
+  })
 
   if (token && (response.status === 401 || response.status === 403)) {
     console.error(
       `[landing] GITHUB_TOKEN rejected for ${path} (${response.status}); retrying unauthenticated`
     )
 
-    return fetch(url, { ...init, headers: githubHeaders() })
+    return fetch(url, {
+      ...init,
+      headers: githubHeaders(),
+      signal: AbortSignal.timeout(GITHUB_TIMEOUT_MS),
+    })
   }
 
   return response
