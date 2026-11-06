@@ -126,16 +126,28 @@ export async function LandingPage({ product }: ProductProps) {
   ])
 
   return (
-    <main className="min-h-svh bg-background text-foreground">
+    <div className="min-h-svh bg-background text-foreground">
+      <a
+        className="sr-only z-50 rounded-md bg-background px-3 py-2 text-sm font-medium shadow-sm ring-1 ring-border focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        href="#main-content"
+      >
+        Skip to content
+      </a>
+      {/*
+        Header and footer sit outside <main> so they keep their banner and
+        contentinfo landmark roles; nested inside <main> they lose them.
+      */}
       <SiteHeader product={product} />
-      <Hero product={product} release={release} socialProof={socialProof} />
-      <ProviderSection product={product} />
-      <FeatureSection product={product} />
-      <PrivacySection product={product} />
-      <ProductGallery product={product} />
-      <AvailabilitySection product={product} release={release} />
+      <main id="main-content">
+        <Hero product={product} release={release} socialProof={socialProof} />
+        <ProviderSection product={product} />
+        <FeatureSection product={product} />
+        <PrivacySection product={product} />
+        <ProductGallery product={product} />
+        <AvailabilitySection product={product} release={release} />
+      </main>
       <SiteFooter product={product} />
-    </main>
+    </div>
   )
 }
 

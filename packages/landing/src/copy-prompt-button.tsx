@@ -3,7 +3,8 @@
 import { buttonVariants } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { Check, Copy } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+
+import { useCopyToClipboard } from "./use-copy-to-clipboard"
 
 type CopyPromptButtonProps = {
   label: string
@@ -11,34 +12,26 @@ type CopyPromptButtonProps = {
 }
 
 export function CopyPromptButton({ label, text }: CopyPromptButtonProps) {
-  const [copied, setCopied] = useState(false)
-  const resetTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
-
-  useEffect(() => () => clearTimeout(resetTimer.current), [])
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      clearTimeout(resetTimer.current)
-      resetTimer.current = setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard access denied; leave the label unchanged.
-    }
-  }
+  const { copied, copy } = useCopyToClipboard(text)
 
   return (
-    <button
-      className={cn(buttonVariants({ variant: "outline" }))}
-      onClick={copy}
-      type="button"
-    >
-      {copied ? (
-        <Check aria-hidden="true" data-icon="inline-start" />
-      ) : (
-        <Copy aria-hidden="true" data-icon="inline-start" />
-      )}
-      {copied ? "Copied" : label}
-    </button>
+    <>
+      <button
+        className={cn(buttonVariants({ variant: "outline" }))}
+        onClick={copy}
+        type="button"
+      >
+        {copied ? (
+          <Check aria-hidden="true" data-icon="inline-start" />
+        ) : (
+          <Copy aria-hidden="true" data-icon="inline-start" />
+        )}
+        {copied ? "Copied" : label}
+      </button>
+      {/* A button's text changing is not announced; a live region is. */}
+      <span className="sr-only" role="status">
+        {copied ? "Copied to clipboard" : ""}
+      </span>
+    </>
   )
 }
