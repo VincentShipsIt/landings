@@ -16,3 +16,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
   `macsweep.ts`, `openfocus.ts`, `opentv.ts`), plus `shared.ts` for copy shared
   across products and `index.ts` as the barrel.
 - Run shadcn from one app directory, for example `cd apps/meterbardev && bunx --bun shadcn@latest add card`.
+
+## Claude model routing
+
+- Standard implementation: Claude Sonnet 5.5.
+- Big implementation (large or cross-cutting changes) and planning: Claude Opus 5.5 or newer.
+- Audits, major or minor: the latest Claude Fable (5.2 today). Fable never implements or edits code.
